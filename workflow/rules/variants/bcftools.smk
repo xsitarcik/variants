@@ -72,7 +72,7 @@ rule bcftools__annotate_vcf:
     log:
         "logs/variants_bcftools/annotate_vcf/{reference}/{sample}.log",
     conda:
-        "../envs/bcftools.yaml"
+        "../../envs/bcftools.yaml"
     shell:
         "bcftools annotate --set-id '%CHROM:%POS:%REF:%ALT' -O v -o {output} {input} 1> {log} 2>&1"
 
@@ -85,7 +85,7 @@ rule bcftools__fill_tags:
     log:
         "logs/variants_bcftools/tag_fill/{reference}/{sample}.log",
     conda:
-        "../envs/bcftools.yaml"
+        "../../envs/bcftools.yaml"
     shell:
         "bcftools plugin fill-tags {input} -O v -o {output} -- --tags 'AF,AC,AN' 1> {log} 2>&1"
 

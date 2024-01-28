@@ -1,7 +1,7 @@
 rule ivar__get_variants:
     input:
-        bam="results/mapping/deduplicated/{sample}.bam",
-        bai="results/mapping/deduplicated/{sample}.bam.bai",
+        bam=infer_bam_for_sample_and_ref,
+        bai=infer_bai_for_sample_and_ref,
         ref=infer_reference_fasta,
     output:
         tsv=temp("results/variants_ivar/{reference}/{sample}/all.tsv"),
@@ -39,7 +39,7 @@ rule custom__compute_mixed_positions:
         mixed_positions="results/variants_ivar/{reference}/{sample}/filtered.tsv",
         readcount=temp("results/variants_ivar/{reference}/{sample}/filtered_count.tsv"),
     params:
-        unpack(get_ivar_postfilter_params()),
+        get_ivar_postfilter_params(),
     log:
         "logs/mixed_positions/{reference}/{sample}.log",
     wrapper:
