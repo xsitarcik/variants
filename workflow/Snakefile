@@ -16,9 +16,6 @@ module mapping_workflow:
 use rule * from mapping_workflow as mapping_*
 
 
-include: "rules/indexing.smk"
-
-
 for method in config["variants"]["callers"]:
 
     include: f"rules/variants/{method}.smk"

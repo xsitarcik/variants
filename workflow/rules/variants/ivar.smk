@@ -39,7 +39,10 @@ rule custom__compute_mixed_positions:
         mixed_positions="results/variants_ivar/{reference}/{sample}/filtered.tsv",
         readcount=temp("results/variants_ivar/{reference}/{sample}/filtered_count.tsv"),
     params:
-        get_ivar_postfilter_params(),
+        alt_depth=config["variants__ivar"]["postfilter"]["min_alt_depth"],
+        min_alt_freq=config["variants__ivar"]["postfilter"]["min_alt_freq"],
+        max_alt_freq=config["variants__ivar"]["postfilter"]["max_alt_freq"],
+        total_depth=config["variants__ivar"]["postfilter"]["min_total_depth"],
     log:
         "logs/mixed_positions/{reference}/{sample}.log",
     wrapper:

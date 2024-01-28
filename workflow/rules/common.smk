@@ -161,18 +161,6 @@ def parse_ivar_params_for_variants():
     return " ".join(ivar_params)
 
 
-def get_ivar_postfilter_params():
-    if not config["variants__ivar"]["do_postfilter"]:
-        return {}
-
-    return {
-        "alt_depth": config["variants__ivar"]["postfilter"]["min_alt_depth"],
-        "min_alt_freq": config["variants__ivar"]["postfilter"]["min_alt_freq"],
-        "max_alt_freq": config["variants__ivar"]["postfilter"]["max_alt_freq"],
-        "total_depth": config["variants__ivar"]["postfilter"]["min_total_depth"],
-    }
-
-
 ### Resource handling #################################################################################################
 
 
