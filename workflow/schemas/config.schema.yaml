@@ -8,36 +8,42 @@ definitions:
       variants:
         type: object
         "$ref": "#/definitions/Variants"
-      resources:
-        type: object
-        "$ref": "#/definitions/Resources"
       threads:
         type: object
         "$ref": "#/definitions/Threads"
+      variants__bcftools:
+        type: object
+        default: {}
+        "$ref": "#/definitions/VariantsBcftools"
     title: VariantsWorkflow
-    # allOf:
-    #   - if:
-    #       properties:
-    #         mapping:
-    #           properties:
-    #             deduplication:
-    #               type: string
-    #     then:
-    #       properties:
-    #         resources:
-    #           required:
-    #             - mapping__deduplication_mem_mb
-    #   - if:
-    #       properties:
-    #         mapping:
-    #           properties:
-    #             _generate_qualimap:
-    #               minItems: 1
-    #     then:
-    #       properties:
-    #         resources:
-    #           required:
-    #             - mapping__qualimap_mem_mb
+    allOf:
+      - if:
+          properties:
+            variants:
+              properties:
+                callers:
+                  contains:
+                    type: string
+                    const: "bcftools"
+        then:
+          properties:
+            threads:
+              required:
+                - variants__bcftools
+          required:
+            - variants__bcftools
+      - if:
+          properties:
+            variants:
+              properties:
+                callers:
+                  contains:
+                    type: string
+                    const: "ivar"
+        then:
+          required:
+            - variants__ivar
+
   Variants:
     additionalProperties: false
     title: Variants
@@ -52,30 +58,188 @@ definitions:
         minItems: 1
     required:
       - callers
-    # allOf:
-    #   - if:
-    #       properties:
-    #         _generate_fastqc_for:
-    #           contains:
-    #             const: "deduplication"
-    #     then:
-    #       properties:
-    #         deduplication:
-    #           type: string
-    #           description: "Mapping->Deduplication is required if qualimap is requested for deduplication"
-  Resources:
-    title: Resources
+  VariantsBcftools:
+    type: object
+    additionalProperties: false
+    properties:
+      min_base_quality:
+        type: integer
+        default: 13
+        description: "Minimum base quality for a base to be considered."
+      min_mapping_quality:
+        type: integer
+        default: 0
+        description: "Minimum mapping quality for an alignment to be used."
+      adjust_quality_coef:
+        type: integer
+        default: 0
+        description: "Coefficient for downgrading mapping quality for reads containing excessive mismatches. Given a read with a phred-scaled probability q of being generated from the mapped position, the new mapping quality is about sqrt((INT-q)/INT)*INT. A zero value (the default) disables this functionality."
+      min_fraction_of_gaps:
+        type: number
+        default: 0.002
+        Minimum: 0
+        Maximum: 1
+        description: "Minimum fraction of gapped reads."
+      annotation:
+        type: string
+        default: "FORMAT/AD,FORMAT/ADF,FORMAT/ADR,FORMAT/DP"
+        description: "Comma-separated list of FORMAT and INFO tags to output."
+      redo_base_alignment_qual:
+        type: boolean
+        default: false
+        description: "Set to true to recalculate BAQ on the fly, ignore existing BQ tags."
+      ploidy:
+        type: string
+        description: "predefined ploidy"
+      keep_alts:
+        type: boolean
+        default: false
+        description: "output all alternate alleles present in the alignments even if they do not appear in any of the genotypes."
+      variants_only:
+        type: boolean
+        default: true
+        description: "output variant sites only."
+      format_fields:
+        type: string
+        default: "GQ,GP"
+        description: "comma-separated list of FORMAT fields to output for each sample. Currently GQ and GP fields are supported. For convenience, the fields can be given as lower case letters. Prefixed with '^' indicates a request for tag removal of auxiliary tags useful only for calling."
+      do_postfilter:
+        type: boolean
+      postfilter:
+        type: object
+        default: {}
+        "$ref": "#/definitions/VariantsBcftoolsPostfilter"
+    if:
+      properties:
+        do_postfilter:
+          const: true
+    then:
+      required:
+        - postfilter
+    required:
+      - ploidy
+      - min_base_quality
+      - min_mapping_quality
+      - adjust_quality_coef
+      - min_fraction_of_gaps
+      - annotation
+      - do_postfilter
+    title: VariantsCalling
+  VariantsBcftoolsPostfilter:
+    type: object
+    additionalProperties: false
+    properties:
+      multiallelic:
+        type: string
+        enum:
+          - "+any"
+          - "-any"
+          - "+snps"
+          - "-snps"
+          - "+indels"
+          - "-indels"
+          - "+both"
+          - "-both"
+        description: "split multiallelic sites into biallelic records (-) or join biallelic sites into multiallelic records (+). An optional type string can follow which controls variant types which should be split or merged together: If only SNP records should be split or merged, specify snps; if both SNPs and indels should be merged separately into two records, specify both; if SNPs and indels should be merged into a single record, specify any."
+      snp_gap:
+        type: integer
+        default: 0
+        description: "filter SNPs within INT base pairs of an indel or other other variant type. Set to 0 to turn off"
+      indel_gap:
+        type: integer
+        default: 0
+        description: "filter clusters of indels separated by INT or fewer base pairs allowing only one to pass. Set to 0 to turn off"
+      set_gts_for_failed:
+        type: string
+        enum:
+          - "."
+          - "0"
+        description: "Comma-separated list of FORMAT and INFO tags to output."
+      include:
+        type: string
+        description: "predefined ploidy"
+      exclude:
+        type: string
+        description: "predefined ploidy"
+      trim_alt_alleles:
+        type: boolean
+        default: false
+        description: "Set to true to recalculate BAQ on the fly, ignore existing BQ tags."
+    required:
+      - multiallelic
+    title: VariantsBcftoolsPostfilter
+  VariantsIvar:
+    type: object
+    additionalProperties: false
+    properties:
+      count_orphans:
+        type: boolean
+        default: false
+        description: "Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set."
+      max_read_depth:
+        type: integer
+        default: 600000
+        description: "This limits the number of reads to load in memory per input file. Decreases needed memory but increases running time."
+      min_base_quality:
+        type: integer
+        default: 13
+        description: "Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality."
+      min_mapping_quality:
+        type: integer
+        default: 0
+        description: "Minimum mapping quality for an alignment to be used."
+      min_base_quality_threshold:
+        type: integer
+        default: 20
+        description: "Minimum quality score threshold to count base in ivar variants"
+      min_frequency_threshold:
+        type: number
+        default: 0
+        Minimum: 0
+        Maximum: 1
+        description: "Minimum frequency threshold to call variants."
+      min_read_depth:
+        type: integer
+        default: 10
+        description: "Minimum read depth to call variants"
+      do_postfilter:
+        type: boolean
+      postfilter:
+        type: object
+        "$ref": "#/definitions/VariantsIvarPostfilter"
+    if:
+      properties:
+        do_postfilter:
+          const: true
+    then:
+      required:
+        - postfilter
+    title: VariantsIvar
+  VariantsIvarPostfilter:
+    type: object
+    additionalProperties: false
+    properties:
+      min_alt_depth:
+        type: integer
+        default: 2
+        description: "Mixed positions must have at least this ALT_DP value to be counted"
+      min_alt_freq:
+        type: number
+        default: 0.1
+        description: "Mixed positions must have at least this ALT_FREQ value to be counted"
+      max_alt_freq:
+        type: number
+        default: 0.9
+        description: "Mixed positions cannot have ALT_FREQ equal or greater than this value"
+      min_total_depth:
+        type: integer
+        default: 10
+        description: "Mixed positions must have at least this TOTAL_DP value to be counted"
+    title: VariantsIvarPostfilter
   Threads:
     additionalProperties: true
-    mapping__mapping:
+    variants__bcftools:
       type: integer
       default: 1
       description: "Number of threads to use for mapping"
-    mapping__indexing:
-      type: integer
-      default: 1
-      description: "Number of threads to use for bam_index"
     title: Threads
-    required:
-      - mapping__mapping
-      - mapping__indexing
