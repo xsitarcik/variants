@@ -13,7 +13,6 @@ mapping:
 
 variants:
   callers: ["bcftools", "ivar"] # Specify method for variant calling: "bcftools", "ivar".
-  postfilter: True # OPT - specify whether to postfilter variants. Allowed: True, False.
 
 ### HYPERPARAMETERS #############################
 reads__trimming__cutadapt:
@@ -43,7 +42,7 @@ reads__trimming__cutadapt:
   max_n_bases: null # OPT - Discard read if R1 or R2 has more than the specified number of N bases. The fifth step.
   max_expected_errors: null # OPT - Discard read if R1 or R2 has more expected errors than this.
 
-variants___bcftools__calling: # Uses bcftools mpileup and bcftools call.
+variants__bcftools: # Uses bcftools mpileup and bcftools call.
   min_base_quality: 0 # Minimum base quality for a base to be considered.
   min_mapping_quality: 13 # Minimum mapping quality for an alignment to be used.
   adjust_quality_coef: 50 # Adjust quality for high number of mismatches. See bcftools manual. Set to 0 to disable.
@@ -55,14 +54,31 @@ variants___bcftools__calling: # Uses bcftools mpileup and bcftools call.
   variants_only: True # Output variant sites only.
   format_fields: "GQ,GP" # Comma-separated list of FORMAT fields to output for each sample.
 
-variants___bcftools__postfilter: # Uses bcftools norm, annotate and filter.
-  multiallelic: "+any" # Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
-  snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
-  indel_gap: 10 # Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
-  set_gts_for_failed: "." # Either missing value '.'  or reference allele ('0').
-  include: 'INFO/DP>=10 & GT="alt" & (DP4[2]+DP4[3])/INFO/DP>=0.50' # Filter which sites to include.
-  exclude: "" # Filter which sites to include.
-  trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
+  do_postfilter: True # Whether to postfilter variants.
+  postfilter: # Uses bcftools norm, annotate and filter.
+    multiallelic: "+any" # Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
+    snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
+    indel_gap: 10 # Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
+    set_gts_for_failed: "." # Either missing value '.'  or reference allele ('0').
+    include: 'INFO/DP>=10 & GT="alt" & (DP4[2]+DP4[3])/INFO/DP>=0.50' # Filter which sites to include.
+    exclude: "" # Filter which sites to include.
+    trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
+
+variants__ivar:
+  count_orphans: false # Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
+  max_read_depth: 600000 # Limits the number of reads to load in memory per input file.
+  min_base_quality: 13 # Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality.
+  min_mapping_quality: 20 # Minimum mapping quality for an alignment to be used.
+  min_base_quality_threshold: 20 # Minimum quality score threshold to count base.
+  min_frequency_threshold: 0.03 # Minimum frequency threshold (0 - 1) to call variants.
+  min_read_depth: 10 # Minimum read depth to call variants.
+
+  do_postfilter: True # Whether to postfilter variants.
+  postfilter:
+    min_alt_depth: 2 # Mixed positions must have at least this ALT_DP value.
+    min_alt_freq: 0.1 # Mixed positions must have at least this ALT_FREQ value.
+    max_alt_freq: 0.9 # Mixed positions cannot have ALT_FREQ value equal or larger than this.
+    min_total_depth: 10 # Mixed positions must have at least this TOTAL_DP value.
 
 ### RESOURCES #############################
 
@@ -84,3 +100,4 @@ threads:
   reads__decontamination: 8
   mapping__mapping: 4
   mapping__indexing: 2
+  variants__bcftools: 2

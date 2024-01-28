@@ -2,7 +2,7 @@ rule ivar__get_variants:
     input:
         bam="results/mapping/deduplicated/{sample}.bam",
         bai="results/mapping/deduplicated/{sample}.bam.bai",
-        ref=get_reference_fasta(),
+        ref=infer_reference_fasta,
     output:
         tsv=temp("results/variants_ivar/{reference}/{sample}/all.tsv"),
     params:
@@ -20,7 +20,7 @@ rule ivar__variants_to_vcf:
     output:
         all=report(
             "results/variants_ivar/{reference}/{sample}/all.vcf",
-            category="{sample}",
+            category="{sample} - {reference}",
             labels={
                 "Type": "Variants - Ivar vcf",
             },
@@ -34,50 +34,47 @@ rule ivar__variants_to_vcf:
 
 rule custom__compute_mixed_positions:
     input:
-        "results/variants_ivar/{sample}/all.tsv",
+        "results/variants_ivar/{reference}/{sample}/all.tsv",
     output:
-        mixed_positions="results/variants_ivar/{sample}/mixed_positions.tsv",
-        readcount=temp("results/variants_ivar/{sample}/mixed_positions_count.tsv"),
+        mixed_positions="results/variants_ivar/{reference}/{sample}/filtered.tsv",
+        readcount=temp("results/variants_ivar/{reference}/{sample}/filtered_count.tsv"),
     params:
-        alt_depth=config["mixed_positions_params"]["filtering"]["min_alt_depth"],
-        min_alt_freq=config["mixed_positions_params"]["filtering"]["min_alt_freq"],
-        max_alt_freq=config["mixed_positions_params"]["filtering"]["max_alt_freq"],
-        total_depth=config["mixed_positions_params"]["filtering"]["min_total_depth"],
+        unpack(get_ivar_postfilter_params()),
     log:
-        "logs/mixed_positions/{sample}.log",
+        "logs/mixed_positions/{reference}/{sample}.log",
     wrapper:
         "https://github.com/xsitarcik/wrappers/raw/v1.12.7/wrappers/ivar/mixed_positions"
 
 
 rule report__ivar_variants_to_html:
     input:
-        "results/variants_ivar/{sample}/all.tsv",
+        "results/variants_ivar/{reference}/{sample}/all.tsv",
     output:
         report(
-            "results/variants_ivar/{sample}/all.html",
-            category="{sample}",
+            "results/variants_ivar/{reference}/{sample}/all.html",
+            category="{sample} - {reference}",
             labels={
                 "Type": "Variants - Ivar table",
             },
         ),
     log:
-        "logs/report/ivar_variants/{sample}.log",
+        "logs/report/ivar_variants/{reference}/{sample}.log",
     wrapper:
         "https://github.com/xsitarcik/wrappers/raw/v1.12.7/wrappers/ivar/html_convert"
 
 
 rule report__mixed_positions_to_html:
     input:
-        "results/variants_ivar/{sample}/mixed_positions.tsv",
+        "results/variants_ivar/{reference}/{sample}/filtered.tsv",
     output:
         report(
-            "results/variants_ivar/{sample}/mixed_positions.html",
-            category="{sample}",
+            "results/variants_ivar/{reference}/{sample}/filtered.html",
+            category="{sample} - {reference}",
             labels={
-                "Type": "Mixed positions - Ivar",
+                "Type": "Filtered variants - Ivar",
             },
         ),
     log:
-        "logs/report/mixed_positions/{sample}.log",
+        "logs/report/mixed_positions/{reference}/{sample}.log",
     wrapper:
         "https://github.com/xsitarcik/wrappers/raw/v1.12.7/wrappers/ivar/html_convert"

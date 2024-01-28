@@ -1,15 +1,15 @@
 rule bcftools__mpileup_bcf:
     input:
         alignments=infer_bam_for_sample_and_ref,
-        ref=infer_reference_fasta(),
-        index=infer_reference_faidx(),
+        ref=infer_reference_fasta,
+        index=infer_reference_faidx,
         bai=infer_bai_for_sample_and_ref,
     output:
         pileup=temp("results/variants_bcftools/{reference}/original/{sample}.pileup.bcf"),
     params:
         uncompressed_bcf=True,
         extra=get_bcftools_mpileup_params(),
-    threads: min(config["threads"]["bcftools"], config["max_threads"])
+    threads: get_threads_for_bcftools()
     log:
         "logs/variants_bcftools/mpileup_bcf/{reference}/{sample}.log",
     wrapper:
@@ -24,7 +24,7 @@ rule bcftools__call_variants:
     params:
         caller="--multiallelic-caller",
         extra=get_bcftools_calling_params(),
-    threads: min(config["threads"]["bcftools"], config["max_threads"])
+    threads: get_threads_for_bcftools()
     log:
         "logs/variants_bcftools/call_variants/{reference}/{sample}.log",
     wrapper:
@@ -34,8 +34,8 @@ rule bcftools__call_variants:
 rule gatk__prepare_vcf:
     input:
         vcf="results/variants_bcftools/{reference}/original/{sample}.bcftools.vcf",
-        ref=infer_reference_fasta(),
-        ref_dct=infer_reference_dict(),
+        ref=infer_reference_fasta,
+        ref_dct=infer_reference_dict,
     output:
         vcf=temp("results/variants_bcftools/{reference}/original/{sample}.vcf"),
     log:
@@ -50,8 +50,8 @@ rule gatk__prepare_vcf:
 rule bcftools__normalize_vcf:
     input:
         vcf="results/variants_bcftools/{reference}/original/{sample}.vcf",
-        ref=infer_reference_fasta(),
-        index=infer_reference_faidx(),
+        ref=infer_reference_fasta,
+        index=infer_reference_faidx,
     output:
         temp("results/variants_bcftools/{reference}/normalized/{sample}.norm.bcf"),
     params:
@@ -59,7 +59,7 @@ rule bcftools__normalize_vcf:
         extra=get_bcftools_norm_params(),
     log:
         "logs/variants_bcftools/normalize_vcf/{reference}/{sample}.log",
-    threads: min(config["threads"]["bcftools"], config["max_threads"])
+    threads: get_threads_for_bcftools()
     wrapper:
         "v3.3.3/bio/bcftools/norm"
 
@@ -99,26 +99,26 @@ rule bcftools__filter_vcf:
         extra=get_bcftools_filter_params(),
     log:
         "logs/variants_bcftools/filter_vcf/{reference}/{sample}.log",
-    threads: min(config["threads"]["bcftools"], config["max_threads"])
+    threads: get_threads_for_bcftools()
     wrapper:
         "v3.3.3/bio/bcftools/filter"
 
 
 rule bcftools__view_filtered_vcf:
     input:
-        "results/variants_bcftools/filtered/{reference}/{sample}.filtered.bcf",
+        "results/variants_bcftools/{reference}/filtered/{sample}.filtered.bcf",
     output:
         report(
-            "results/variants_bcftools/filtered/{reference}/{sample}.vcf",
+            "results/variants_bcftools/{reference}/filtered/{sample}.vcf",
             category="{sample} - {reference}",
             labels={
                 "Type": "Variants - bcftools/filtered",
             },
         ),
     params:
-        extra="--trim-alt-alleles" if config["variants__postprocess"]["trim_alt_alleles"] else "",
+        extra=get_bcftools_view_filter_params(),
     log:
         "logs/variants_bcftools/view_filtered_vcf/{reference}/{sample}.log",
-    threads: min(config["threads"]["bcftools"], config["max_threads"])
+    threads: get_threads_for_bcftools()
     wrapper:
         "v3.3.3/bio/bcftools/view"

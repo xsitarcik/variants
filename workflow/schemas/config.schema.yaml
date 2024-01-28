@@ -1,1 +1,81 @@
-# schema for the config
+"$schema": https://json-schema.org/draft/2020-12/schema
+"$ref": "#/definitions/VariantsWorkflow"
+definitions:
+  VariantsWorkflow:
+    type: object
+    additionalProperties: true
+    properties:
+      variants:
+        type: object
+        "$ref": "#/definitions/Variants"
+      resources:
+        type: object
+        "$ref": "#/definitions/Resources"
+      threads:
+        type: object
+        "$ref": "#/definitions/Threads"
+    title: VariantsWorkflow
+    # allOf:
+    #   - if:
+    #       properties:
+    #         mapping:
+    #           properties:
+    #             deduplication:
+    #               type: string
+    #     then:
+    #       properties:
+    #         resources:
+    #           required:
+    #             - mapping__deduplication_mem_mb
+    #   - if:
+    #       properties:
+    #         mapping:
+    #           properties:
+    #             _generate_qualimap:
+    #               minItems: 1
+    #     then:
+    #       properties:
+    #         resources:
+    #           required:
+    #             - mapping__qualimap_mem_mb
+  Variants:
+    additionalProperties: false
+    title: Variants
+    properties:
+      callers:
+        type: array
+        items:
+          type: string
+          enum:
+            - "bcftools"
+            - "ivar"
+        minItems: 1
+    required:
+      - callers
+    # allOf:
+    #   - if:
+    #       properties:
+    #         _generate_fastqc_for:
+    #           contains:
+    #             const: "deduplication"
+    #     then:
+    #       properties:
+    #         deduplication:
+    #           type: string
+    #           description: "Mapping->Deduplication is required if qualimap is requested for deduplication"
+  Resources:
+    title: Resources
+  Threads:
+    additionalProperties: true
+    mapping__mapping:
+      type: integer
+      default: 1
+      description: "Number of threads to use for mapping"
+    mapping__indexing:
+      type: integer
+      default: 1
+      description: "Number of threads to use for bam_index"
+    title: Threads
+    required:
+      - mapping__mapping
+      - mapping__indexing
