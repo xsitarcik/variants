@@ -1,7 +1,29 @@
-# The highest level logic of the workflow is defined here
-# Here **and only here** should be defined which other .smk files are included
-# Here define the rule `all` gathering all the outputs of the workflow
-# Here can be defined also other highlevel snakemake stuff like `localrules`, `min_version` or `report`
-#
-# Please follow the best practices:
-# https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
+from snakemake.utils import min_version
+
+min_version("7.25.0")
+
+
+include: "rules/common.smk"
+
+
+module mapping_workflow:
+    snakefile:
+        github("xsitarcik/mapping", path="workflow/Snakefile", tag="v2.0.1")
+    config:
+        config
+
+
+use rule * from mapping_workflow as mapping_*
+
+
+for method in config["variants"]["callers"]:
+
+    include: f"rules/variants/{method}.smk"
+
+
+rule all:
+    input:
+        **mapping_workflow.get_outputs(),
+        **get_outputs(),
+    default_target: True
+    localrule: True

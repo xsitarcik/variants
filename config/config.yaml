@@ -1,1 +1,124 @@
-# template for the configuration of the workflow
+reads: # Specify the order and methods for each read processing step. If no method is specified, the step will not be performed.
+  subsampling: null # OPT - specify method of subsampling. Allowed: "seqtk", "null".
+  trimming: "cutadapt" # OPT - specify method of trimming. Allowed: "cutadapt", "null".
+  decontamination: null # OPT - specify method of decontamination. Allowed: "kraken", "null".
+  deduplication: null # OPT - specify method of deduplication. Allowed: "fastuniq", "null".
+  _generate_fastqc_for: [] # OPT - specify which steps to generate fastqc for. Allowed: "original"."subsampling", "trimming", "decontamination", "deduplication" or empty list (default: empty list).
+
+mapping:
+  mapping: "bwa" # Specify method for mapping. Allowed: "bwa".
+  reference_dirs: [] # specify list of reference dirs to map against. Each dir must contain a fasta file names as the basename dir.
+  deduplication: "picard" # OPT - specify method for mapping deduplication. Allowed: "picard", null.
+  _generate_qualimap: [] # OPT - specify which steps to generate qualimap for. Allowed: "mapping", "deduplication" or empty list (default: empty list).
+
+variants:
+  callers: ["bcftools", "ivar"] # Specify method for variant calling: "bcftools", "ivar".
+
+### HYPERPARAMETERS #############################
+reads__subsampling__seqtk:
+  seed: 1
+  n_reads: 1
+  reduce_memory: true
+
+reads__trimming__cutadapt:
+  # 1st stage - trimming
+  cut_from_start_r1: null # OPT - removes a specified number of bases from the beginning of the R1 read.
+  cut_from_start_r2: null # OPT - removes a specified number of bases from the beginning of the R2 read.
+  cut_from_end_r1: null # OPT - removes a specified number of bases from the end of the R1 read.
+  cut_from_end_r2: null # OPT - removes a specified number of bases from the end of the R2 read.
+  quality_cutoff_from_5_end_r1: 20 # cutoff on 5' end of R1 read. The second step.
+  quality_cutoff_from_3_end_r1: 20 # cutoff on 3' end of R1 read. The second step.
+  quality_cutoff_from_5_end_r2: 20 # cutoff on 5' end of R2 read. The second step.
+  quality_cutoff_from_3_end_r2: 20 # cutoff on 3' end of R2 read. The second step.
+
+  # 2nd stage - Adapter removal
+  adapter_removal: # OPT - set "do" to false to skip this step.
+    do: true # If true, all below options are required. Else, they are ignored/can be deleted.
+    adapters_fasta: "data/adapters/{ADAPTERS.FASTA}"
+    action: "trim" # Defines an action to perform with the found adapter.
+    overlap: 3 # Minimum number of bases required to overlap with the adapter (default: 3).
+    read_location: "anywhere" # Uses adapters defined in adapters_fasta. Searches for adapters anywhere. Possible values: 'regular', 'front' and "anywhere" (default: "anywhere").
+    error_rate: 0.1 # Error tolerance used when searching for adapter (default: 0.1).
+    times: 1 # How many times to do adapter removal (default: 1).
+    keep_trimmed_only: false # Discard reads with no adapters found (default: false).
+
+  # 3rd stage - post adapter trimming
+  shorten_to_length: null # OPT - both R1 and R2 are shortened to this length.
+  trim_N_bases_on_ends: null # OPT - trim flanking N's on both read ends.
+
+  # 4th stage - Filtering
+  min_length_r1: null # OPT - minimum R1 read length. If R1 read is shorter, both R1 and R2 reads are discarded. The fourth step.
+  min_length_r2: null # OPT - minimum R2 read length. If R2 read is shorter, both R1 and R2 reads are discarded. The fourth step.
+  max_length_r1: null # OPT - maximum R1 read length. If R1 read is longer, both R1 and R2 reads are discarded. The fourth step.
+  max_length_r2: null # OPT - maximum R2 read length. If R2 read is longer, both R1 and R2 reads are discarded. The fourth step.
+  max_n_bases: null # OPT - Discard read if R1 or R2 has more than the specified number of N bases. The fifth step.
+  max_expected_errors: null # OPT - Discard read if R1 or R2 has more expected errors than this.
+
+reads__decontamination__kraken:
+  kraken_dir: "path_to_kraken/k2_viral_20230314" # Directory containing kraken DB files. If does not exist, will be downloaded using the dirname.
+  # get KRAKEN_TAG from https://benlangmead.github.io/aws-indexes/k2
+  exclude_taxa_ids: # list of taxonomy IDs to exclude.
+    - 9606 # Homo Sapiens
+  exclude_children: false # Whether to exclude reads classified at more specific levels than specified taxonomy ID levels.
+  exclude_ancestors: false # Whether to exclude reads classified at all taxonomy levels between root and the specified taxonomy ID levels.
+  save_memory: true # If true, kraken limits RAM memory usage but sacrifices speed.
+
+variants__bcftools: # Uses bcftools mpileup and bcftools call.
+  min_base_quality: 0 # Minimum base quality for a base to be considered.
+  min_mapping_quality: 13 # Minimum mapping quality for an alignment to be used.
+  adjust_quality_coef: 50 # Adjust quality for high number of mismatches. See bcftools manual. Set to 0 to disable.
+  min_fraction_of_gaps: 0.05 # Minimum fraction of gapped reads.
+  annotation: "FORMAT/AD,FORMAT/ADF,FORMAT/ADR,FORMAT/DP" # Comma-separated list of FORMAT and INFO tags to output.
+  redo_base_alignment_qual: True # Recalculate BAQ on the fly, ignore existing BQ tags.
+  ploidy: "GRCh38" # Predefined ploidy.
+  keep_alts: True # Report all alleles, not only those which are in called genotypes.
+  variants_only: True # Output variant sites only.
+  format_fields: "GQ,GP" # Comma-separated list of FORMAT fields to output for each sample.
+
+  do_postfilter: True # Whether to postfilter variants.
+  postfilter: # Uses bcftools norm, annotate and filter.
+    multiallelic: "+any" # Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
+    snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
+    indel_gap: 10 # Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
+    set_gts_for_failed: "." # Either missing value '.'  or reference allele ('0').
+    include: 'INFO/DP>=10 & GT="alt" & (DP4[2]+DP4[3])/INFO/DP>=0.50' # Filter which sites to include.
+    exclude: "" # Filter which sites to include.
+    trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
+
+variants__ivar:
+  count_orphans: false # Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
+  max_read_depth: 600000 # Limits the number of reads to load in memory per input file.
+  min_base_quality: 13 # Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality.
+  min_mapping_quality: 20 # Minimum mapping quality for an alignment to be used.
+  min_base_quality_threshold: 20 # Minimum quality score threshold to count base.
+  min_frequency_threshold: 0.03 # Minimum frequency threshold (0 - 1) to call variants.
+  min_read_depth: 10 # Minimum read depth to call variants.
+
+  do_postfilter: True # Whether to postfilter variants.
+  postfilter:
+    min_alt_depth: 2 # Mixed positions must have at least this ALT_DP value.
+    min_alt_freq: 0.1 # Mixed positions must have at least this ALT_FREQ value.
+    max_alt_freq: 0.9 # Mixed positions cannot have ALT_FREQ value equal or larger than this.
+    min_total_depth: 10 # Mixed positions must have at least this TOTAL_DP value.
+
+### RESOURCES #############################
+
+max_threads: 8
+max_mem_mb: 16384
+
+resources:
+  reads__trimming_mem_mb: 4096
+  reads__fastqc_mem_mb: 2048
+  mapping__mapping_mem_mb: 4096
+  mapping__indexing_mem_mb: 4096
+  mapping__deduplication_mem_mb: 4096
+  mapping__qualimap_mem_mb: 4096
+
+threads:
+  reads__trimming: 4
+  reads__fastqc: 1
+  reads__deduplication: 4
+  reads__decontamination: 8
+  mapping__mapping: 4
+  mapping__indexing: 2
+  variants__bcftools: 4
