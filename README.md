@@ -1,7 +1,7 @@
 # Snakemake workflow: variants
 
 [![Snakemake](https://img.shields.io/badge/snakemake-≥7.25.0-brightgreen.svg)](https://snakemake.github.io)
-[![GitHub actions status](https://github.com/xsitarcik/>/workflows/Tests/badge.svg?branch=main)](https://github.com/xsitarcik/variants/actions?query=branch%3Amain+workflow%3ATests)
+[![GitHub actions status](https://github.com/xsitarcik/variants/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/xsitarcik/variants/actions?query=branch%3Amain+workflow%3ATests)
 
 A Snakemake workflow for variants
 
@@ -10,13 +10,13 @@ A Snakemake workflow for variants
 To install the workflow, simply git clone the repository into the path you want:
 
 ```bash
-git clone git@github.com:xsitarcik/reads.git
+git clone git@github.com:xsitarcik/variants.git
 ```
 
 Install the following conda environment:
 
 ```bash
-mamba create -c conda-forge -c bioconda --name snakemake_reads python=3.11 snakemake=7.25 peppy snakemake-wrapper-utils
+mamba create -c conda-forge -c bioconda --name snakemake_variants python=3.11 snakemake=7.25 peppy snakemake-wrapper-utils
 ```
 
 **IMPORTANT**: change the directory to the cloned repository - workflow directory. Every relative path mentioned is relative to this directory.
