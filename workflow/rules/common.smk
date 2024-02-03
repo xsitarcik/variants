@@ -43,25 +43,32 @@ def get_outputs():
     outputs = {}
     if "bcftools" in config["variants"]["callers"]:
         if config["variants__bcftools"]["do_postfilter"]:
-            outputs["bcftools"] = expand(
+            outputs["variants_bcftools"] = expand(
                 "results/variants_bcftools/{reference}/filtered/{sample}.vcf", sample=sample_names, reference=references
             )
         else:
-            outputs["bcftools"] = expand(
+            outputs["variants_bcftools"] = expand(
                 "results/variants_bcftools/{reference}/normalized/{sample}.vcf",
                 sample=sample_names,
                 reference=references,
             )
     if "ivar" in config["variants"]["callers"]:
         if config["variants__ivar"]["do_postfilter"]:
-            outputs["ivar"] = expand(
+            outputs["variants_ivar"] = expand(
                 "results/variants_ivar/{reference}/{sample}/filtered.html", sample=sample_names, reference=references
             )
         else:
-            outputs["ivar"] = expand(
+            outputs["variants_ivar"] = expand(
                 "results/variants_ivar/{reference}/{sample}/all.vcf", sample=sample_names, reference=references
             )
 
+    if "ivar" in config["consensus"]["callers"]:
+        outputs["consensus_ivar"] = expand(
+            "results/consensus/ivar/{reference}/{sample}.fa", sample=sample_names, reference=references
+        )
+
+    if not outputs:
+        raise ValueError("No outputs defined for variant calling or consensus calling.")
     return outputs
 
 
@@ -158,6 +165,27 @@ def parse_ivar_params_for_variants():
     ivar_params.append("-q {value}".format(value=config["variants__ivar"]["min_base_quality_threshold"]))
     ivar_params.append("-t {value}".format(value=config["variants__ivar"]["min_frequency_threshold"]))
     ivar_params.append("-m {value}".format(value=config["variants__ivar"]["min_read_depth"]))
+    return " ".join(ivar_params)
+
+
+def parse_samtools_params_for_consensus():
+    samtools_params = ["--no-BAQ"]
+    if config["consensus__ivar"]["count_orphans"]:
+        samtools_params.append("--count-orphans")
+
+    samtools_params.append("--max-depth {value}".format(value=config["consensus__ivar"]["max_read_depth"]))
+    samtools_params.append("--min-MQ {value}".format(value=config["consensus__ivar"]["min_mapping_quality"]))
+    samtools_params.append("--min-BQ {value}".format(value=config["consensus__ivar"]["min_base_quality"]))
+    return " ".join(samtools_params)
+
+
+def parse_ivar_params_for_consensus():
+    ivar_params = []
+
+    ivar_params.append("-q {value}".format(value=config["consensus__ivar"]["consensus_base_quality_threshold"]))
+    ivar_params.append("-t {value}".format(value=config["consensus__ivar"]["consensus_frequency_threshold"]))
+    ivar_params.append("-m {value}".format(value=config["consensus__ivar"]["min_consensus_depth"]))
+
     return " ".join(ivar_params)
 
 
