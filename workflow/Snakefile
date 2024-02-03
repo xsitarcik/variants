@@ -21,6 +21,11 @@ for method in config["variants"]["callers"]:
     include: f"rules/variants/{method}.smk"
 
 
+for method in config["consensus"]["callers"]:
+
+    include: f"rules/consensus/{method}.smk"
+
+
 rule all:
     input:
         **mapping_workflow.get_outputs(),

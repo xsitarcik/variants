@@ -14,6 +14,9 @@ mapping:
 variants:
   callers: ["bcftools", "ivar"] # Specify method for variant calling: "bcftools", "ivar".
 
+consensus:
+  callers: ["ivar"]
+
 ### HYPERPARAMETERS #############################
 reads__trimming__cutadapt:
   # 1st stage - trimming
@@ -79,6 +82,15 @@ variants__ivar:
     min_alt_freq: 0.1 # Mixed positions must have at least this ALT_FREQ value.
     max_alt_freq: 0.9 # Mixed positions cannot have ALT_FREQ value equal or larger than this.
     min_total_depth: 10 # Mixed positions must have at least this TOTAL_DP value.
+
+consensus__ivar:
+  count_orphans: false # Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
+  max_read_depth: 1000 # limits the number of reads to load in memory per input file.
+  min_base_quality: 13 # minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality.
+  min_mapping_quality: 20 # minimum mapping quality for an alignment to be used.
+  consensus_base_quality_threshold: 20 # Minimum quality score threshold to count base.
+  consensus_frequency_threshold: 0.5 # Minimum frequency threshold to call consensus.
+  min_consensus_depth: 10 # Minimum depth to call consensus.
 
 ### RESOURCES #############################
 
