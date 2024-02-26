@@ -308,8 +308,9 @@ definitions:
     title: ConsensusIvar
   Threads:
     additionalProperties: true
-    variants__bcftools:
-      type: integer
-      default: 1
-      description: "Number of threads to use for mapping"
+    properties:
+      variants__bcftools:
+        type: integer
+        default: 1
+        description: "Number of threads to use for mapping"
     title: Threads
