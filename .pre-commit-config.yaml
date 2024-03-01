@@ -3,7 +3,7 @@ exclude: "^CHANGELOG.md$"
 
 repos:
   - repo: https://github.com/psf/black
-    rev: 24.1.1
+    rev: 24.2.0
     hooks:
       - id: black
         args:
@@ -50,4 +50,10 @@ repos:
       - id: snakemake_linter
         name: snakemake_linter
         entry: snakemake -c1 --lint --directory .tests/ --snakefile workflow/Snakefile
+        language: python
+      - id: snakemake_dry_run
+        name: snakemake_dry_run
+        entry: snakemake -c1 -n --directory .tests/ --snakefile workflow/Snakefile
+        pass_filenames: false
+        always_run: true
         language: python
