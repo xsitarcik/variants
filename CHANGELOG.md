@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/xsitarcik/variants/compare/v1.1.0...v1.1.1) (2024-03-01)
+
+
+### Bug Fixes
+
+* fixed schema to correctly assert property in threads ([83bc01f](https://github.com/xsitarcik/variants/commit/83bc01ffde64041dc51c5190cccd298a9068ebab))
+
 ## [1.1.0](https://github.com/xsitarcik/variants/compare/v1.0.0...v1.1.0) (2024-02-03)
 
 
