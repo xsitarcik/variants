@@ -26,6 +26,9 @@ definitions:
         type: object
         default: {}
         "$ref": "#/definitions/ConsensusIvar"
+      module_versions:
+        type: object
+        "$ref": "#/definitions/ModuleVersions"
     title: VariantsWorkflow
     allOf:
       - if:
@@ -65,7 +68,10 @@ definitions:
         then:
           required:
             - consensus__ivar
-
+    required:
+      - module_versions
+      - consensus
+      - variants
   Variants:
     additionalProperties: false
     title: Variants
@@ -314,3 +320,21 @@ definitions:
         default: 1
         description: "Number of threads to use for mapping"
     title: Threads
+  ModuleVersions:
+    type: object
+    additionalProperties: true
+    properties:
+      reads:
+        type: string
+        default: 1
+        pattern: "v[0-9]+.[0-9]+.[0-9]+"
+        description: "Version of reads module"
+      mapping:
+        type: string
+        default: 1
+        pattern: "v[0-9]+.[0-9]+.[0-9]+"
+        description: "Version of mapping module"
+    title: ModuleVersions
+    required:
+      - reads
+      - mapping
