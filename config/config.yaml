@@ -65,6 +65,8 @@ reads__decontamination__kraken:
   exclude_children: false # Whether to exclude reads classified at more specific levels than specified taxonomy ID levels.
   exclude_ancestors: false # Whether to exclude reads classified at all taxonomy levels between root and the specified taxonomy ID levels.
   save_memory: true # If true, kraken limits RAM memory usage but sacrifices speed.
+  generate_krona: true # If true, krona is generated from kraken report
+  krona_dir: "/data/genome/taxonomy/krona/2023-12-03/" # Directory where krona dataset is located or will be downloaded.
 
 variants__bcftools: # Uses bcftools mpileup and bcftools call.
   min_base_quality: 0 # Minimum base quality for a base to be considered.
@@ -134,3 +136,7 @@ threads:
   mapping__mapping: 4
   mapping__indexing: 2
   variants__bcftools: 4
+
+module_versions:
+  reads: "v3.2.1"
+  mapping: "v2.1.0"

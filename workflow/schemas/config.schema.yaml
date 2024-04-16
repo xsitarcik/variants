@@ -26,6 +26,9 @@ definitions:
         type: object
         default: {}
         "$ref": "#/definitions/ConsensusIvar"
+      module_versions:
+        type: object
+        "$ref": "#/definitions/ModuleVersions"
     title: VariantsWorkflow
     allOf:
       - if:
@@ -65,7 +68,10 @@ definitions:
         then:
           required:
             - consensus__ivar
-
+    required:
+      - module_versions
+      - consensus
+      - variants
   Variants:
     additionalProperties: false
     title: Variants
@@ -112,8 +118,8 @@ definitions:
       min_fraction_of_gaps:
         type: number
         default: 0.002
-        Minimum: 0
-        Maximum: 1
+        minimum: 0
+        maximum: 1
         description: "Minimum fraction of gapped reads."
       annotation:
         type: string
@@ -230,8 +236,8 @@ definitions:
       min_frequency_threshold:
         type: number
         default: 0
-        Minimum: 0
-        Maximum: 1
+        minimum: 0
+        maximum: 1
         description: "Minimum frequency threshold to call variants."
       min_read_depth:
         type: integer
@@ -298,8 +304,8 @@ definitions:
       consensus_frequency_threshold:
         type: number
         default: 0
-        Minimum: 0
-        Maximum: 1
+        minimum: 0
+        maximum: 1
         description: "Minimum frequency threshold to call consensus."
       min_consensus_depth:
         type: integer
@@ -314,3 +320,21 @@ definitions:
         default: 1
         description: "Number of threads to use for mapping"
     title: Threads
+  ModuleVersions:
+    type: object
+    additionalProperties: true
+    properties:
+      reads:
+        type: string
+        default: 1
+        pattern: "v[0-9]+.[0-9]+.[0-9]+"
+        description: "Version of reads module"
+      mapping:
+        type: string
+        default: 1
+        pattern: "v[0-9]+.[0-9]+.[0-9]+"
+        description: "Version of mapping module"
+    title: ModuleVersions
+    required:
+      - reads
+      - mapping
