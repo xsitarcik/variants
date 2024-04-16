@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/xsitarcik/variants/compare/v1.1.1...v1.2.0) (2024-04-16)
+
+
+### Features
+
+* added module versions configurable ([3e184b2](https://github.com/xsitarcik/variants/commit/3e184b26675ad865afb2fce770c56582c28e8c7f))
+
+
+### Bug Fixes
+
+* fixed schema to lowercase ([c5f5c81](https://github.com/xsitarcik/variants/commit/c5f5c81c9cfa1baad327ae240e5d599c736c257d))
+
 ## [1.1.1](https://github.com/xsitarcik/variants/compare/v1.1.0...v1.1.1) (2024-03-01)
 
 
