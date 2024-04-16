@@ -112,8 +112,8 @@ definitions:
       min_fraction_of_gaps:
         type: number
         default: 0.002
-        Minimum: 0
-        Maximum: 1
+        minimum: 0
+        maximum: 1
         description: "Minimum fraction of gapped reads."
       annotation:
         type: string
@@ -230,8 +230,8 @@ definitions:
       min_frequency_threshold:
         type: number
         default: 0
-        Minimum: 0
-        Maximum: 1
+        minimum: 0
+        maximum: 1
         description: "Minimum frequency threshold to call variants."
       min_read_depth:
         type: integer
@@ -298,8 +298,8 @@ definitions:
       consensus_frequency_threshold:
         type: number
         default: 0
-        Minimum: 0
-        Maximum: 1
+        minimum: 0
+        maximum: 1
         description: "Minimum frequency threshold to call consensus."
       min_consensus_depth:
         type: integer
