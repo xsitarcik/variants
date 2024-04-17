@@ -199,6 +199,36 @@ definitions:
         type: boolean
         default: false
         description: "Report even loci which appear to be monomorphic, and report all considered alleles, even those which are not in called genotypes. Loci which do not have any potential alternates have '.' for ALT. Default: False"
+      do_postfilter:
+        type: boolean
+      postfilter:
+        type: object
+        default: {}
+        "$ref": "#/definitions/VariantsBcftoolsPostfilter"
+    if:
+      properties:
+        do_postfilter:
+          const: true
+    then:
+      required:
+        - postfilter
+    required:
+      - min_mapping_quality
+      - min_base_quality
+      - mismatch_base_quality_threshold
+      - read_mismatch_limit
+      - read_max_mismatch_fraction
+      - read_indel_limit
+      - read_snp_limit
+      - indel_exclusion_window
+      - min_alternate_fraction
+      - min_alternate_count
+      - min_coverage
+      - ploidy
+      - gvcf
+      - report_all_haplotype_alleles
+      - report_monorphic
+      - do_postfilter
   VariantsBcftools:
     type: object
     additionalProperties: false
@@ -271,7 +301,7 @@ definitions:
     additionalProperties: false
     properties:
       multiallelic:
-        type: string
+        type: [string, "null"]
         enum:
           - "+any"
           - "-any"
@@ -281,7 +311,26 @@ definitions:
           - "-indels"
           - "+both"
           - "-both"
-        description: "split multiallelic sites into biallelic records (-) or join biallelic sites into multiallelic records (+). An optional type string can follow which controls variant types which should be split or merged together: If only SNP records should be split or merged, specify snps; if both SNPs and indels should be merged separately into two records, specify both; if SNPs and indels should be merged into a single record, specify any."
+          - null
+        description: "OPT - split multiallelic sites into biallelic records (-) or join biallelic sites into multiallelic records (+). An optional type string can follow which controls variant types which should be split or merged together: If only SNP records should be split or merged, specify snps; if both SNPs and indels should be merged separately into two records, specify both; if SNPs and indels should be merged into a single record, specify any."
+      multi_overlaps:
+        type: [string, "null"]
+        enum:
+          - "missing"
+          - "reference"
+          - null
+        description: "OPT - Allowed: 'missing', 'reference'. Use the reference (0) or missing (.) allele for overlapping alleles after splitting multiallelic sites."
+      atomize:
+        type: boolean
+        default: false
+        description: "Whether to split MNVs into consecutive SNVs."
+      atom_overlaps:
+        type: string
+        enum:
+          - "missing"
+          - "star"
+          - null
+        description: "OPT - Allowed: 'missing', 'star'. Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec."
       snp_gap:
         type: integer
         default: 0
@@ -291,11 +340,12 @@ definitions:
         default: 0
         description: "filter clusters of indels separated by INT or fewer base pairs allowing only one to pass. Set to 0 to turn off"
       set_gts_for_failed:
-        type: string
+        type: [string, "null"]
         enum:
-          - "."
-          - "0"
-        description: "Comma-separated list of FORMAT and INFO tags to output."
+          - "missing"
+          - "reference"
+          - null
+        description: "OPT - Allowed: 'missing', 'reference'. Set genotypes of failed samples to missing value (.) or reference allele (0)."
       include:
         type: string
         description: "predefined ploidy"
@@ -308,6 +358,14 @@ definitions:
         description: "Set to true to recalculate BAQ on the fly, ignore existing BQ tags."
     required:
       - multiallelic
+      - multi_overlaps
+      - atomize
+      - atom_overlaps
+      - snp_gap
+      - indel_gap
+      - set_gts_for_failed
+      - include
+      - exclude
     title: VariantsBcftoolsPostfilter
   VariantsIvar:
     type: object

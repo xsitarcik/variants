@@ -62,9 +62,18 @@ def get_outputs():
                 "results/variants_ivar/{reference}/{sample}/all.vcf", sample=sample_names, reference=references
             )
     if "freebayes" in config["variants"]["callers"]:
-        outputs["variants_ivar"] = expand(
-            "results/variants_freebayes/{reference}/{sample}.vcf", sample=sample_names, reference=references
-        )
+        if config["variants__freebayes"]["do_postfilter"]:
+            outputs["variants_freebayes"] = expand(
+                "results/variants_freebayes/{reference}/{sample}/filtered.vcf",
+                sample=sample_names,
+                reference=references,
+            )
+        else:
+            outputs["variants_freebayes"] = expand(
+                "results/variants_freebayes/{reference}/{sample}/original.vcf",
+                sample=sample_names,
+                reference=references,
+            )
 
     if "ivar" in config["consensus"]["callers"]:
         outputs["consensus_ivar"] = expand(
@@ -118,38 +127,52 @@ def get_bcftools_calling_params():
     return " ".join(extra)
 
 
-def get_bcftools_norm_params():
-    if not config["variants__bcftools"]["do_postfilter"]:
+def get_bcftools_norm_params(tool: str):
+    # common function to parse tool normalization params
+    if not config[f"variants__{tool}"]["do_postfilter"]:
         return ""
 
-    base = "--check-ref w"
-    if form := config["variants__bcftools"]["postfilter"]["multiallelic"]:
-        return base + f" --multiallelics {form}"
-    return base
+    cmd = "--check-ref w"
+    if form := config[f"variants__{tool}"]["postfilter"]["multiallelic"]:
+        cmd += f" --multiallelics {form}"
+
+        if form := config[f"variants__{tool}"]["postfilter"]["multi_overlaps"]:
+            x = "'.'" if form == "missing" else "0"
+            cmd += f" --multi-overlaps {x}"
+
+    if config[f"variants__{tool}"]["postfilter"]["atomize"]:
+        x = "'.'" if form == "missing" else "0"
+        cmd += f" --multi-overlaps {x}"
+
+        if kind := config[f"variants__{tool}"]["postfilter"]["atom_overlaps"]:
+            x = "." if kind == "missing" else "\*"
+            cmd += f" --atom-overlaps {x}"
+    return cmd
 
 
-def get_bcftools_filter_params():
-    if not config["variants__bcftools"]["do_postfilter"]:
+def get_bcftools_filter_params(tool: str):
+    # common function to parse tool filtering params
+    if not config[f"variants__{tool}"]["do_postfilter"]:
         return ""
 
     extra = []
-    if value := config["variants__bcftools"]["postfilter"]["snp_gap"]:
+    if value := config[f"variants__{tool}"]["postfilter"]["snp_gap"]:
         extra.append(f"--SnpGap {value}")
-    if value := config["variants__bcftools"]["postfilter"]["indel_gap"]:
+    if value := config[f"variants__{tool}"]["postfilter"]["indel_gap"]:
         extra.append(f"--IndelGap {value}")
-    if value := config["variants__bcftools"]["postfilter"].get("set_gts_for_failed", False):
+    if value := config[f"variants__{tool}"]["postfilter"].get("set_gts_for_failed", False):
         extra.append(f"--set-GTs {value}")
-    if value := config["variants__bcftools"]["postfilter"].get("include", False):
+    if value := config[f"variants__{tool}"]["postfilter"].get("include", False):
         extra.append(f"--include '{value}'")
-    if value := config["variants__bcftools"]["postfilter"].get("exclude", False):
+    if value := config[f"variants__{tool}"]["postfilter"].get("exclude", False):
         extra.append(f"--exclude '{value}'")
     return " ".join(extra)
 
 
-def get_bcftools_view_filter_params():
-    if not config["variants__bcftools"]["do_postfilter"]:
+def get_bcftools_view_filter_params(tool: str):
+    if not config[f"variants__{tool}"]["do_postfilter"]:
         return ""
-    return "--trim-alt-alleles" if config["variants__bcftools"]["postfilter"]["trim_alt_alleles"] else ""
+    return "--trim-alt-alleles" if config[f"variants__{tool}"]["postfilter"]["trim_alt_alleles"] else ""
 
 
 def parse_samtools_params_for_variants():

@@ -56,7 +56,7 @@ rule bcftools__normalize_vcf:
         temp("results/variants_bcftools/{reference}/normalized/{sample}.norm.bcf"),
     params:
         uncompressed_bcf=True,
-        extra=get_bcftools_norm_params(),
+        extra=get_bcftools_norm_params("bcftools"),
     log:
         "logs/variants_bcftools/normalize_vcf/{reference}/{sample}.log",
     threads: get_threads_for_bcftools()
@@ -96,7 +96,7 @@ rule bcftools__filter_vcf:
     output:
         temp("results/variants_bcftools/{reference}/filtered/{sample}.filtered.bcf"),
     params:
-        extra=get_bcftools_filter_params(),
+        extra=get_bcftools_filter_params("bcftools"),
     log:
         "logs/variants_bcftools/filter_vcf/{reference}/{sample}.log",
     threads: get_threads_for_bcftools()
@@ -116,7 +116,7 @@ rule bcftools__view_filtered_vcf:
             },
         ),
     params:
-        extra=get_bcftools_view_filter_params(),
+        extra=get_bcftools_view_filter_params("bcftools"),
     log:
         "logs/variants_bcftools/view_filtered_vcf/{reference}/{sample}.log",
     threads: get_threads_for_bcftools()
