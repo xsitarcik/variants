@@ -156,16 +156,16 @@ def get_bcftools_filter_params(tool: str):
         return ""
 
     extra = []
-    if value := config[f"variants__{tool}"]["postfilter"]["snp_gap"]:
+    if (value := config[f"variants__{tool}"]["postfilter"]["snp_gap"]) is not None:
         extra.append(f"--SnpGap {value}")
-    if value := config[f"variants__{tool}"]["postfilter"]["indel_gap"]:
+    if (value := config[f"variants__{tool}"]["postfilter"]["indel_gap"]) is not None:
         extra.append(f"--IndelGap {value}")
-    if value := config[f"variants__{tool}"]["postfilter"].get("set_gts_for_failed", False):
+    if (value := config[f"variants__{tool}"]["postfilter"]["set_gts_for_failed"]) is not None:
         x = "'.'" if value == "missing" else "0"
         extra.append(f"--set-GTs {x}")
-    if value := config[f"variants__{tool}"]["postfilter"].get("include", False):
+    if (value := config[f"variants__{tool}"]["postfilter"]["include"]) is not None:
         extra.append(f"--include '{value}'")
-    if value := config[f"variants__{tool}"]["postfilter"].get("exclude", False):
+    if (value := config[f"variants__{tool}"]["postfilter"]["exclude"]) is not None:
         extra.append(f"--exclude '{value}'")
     return " ".join(extra)
 

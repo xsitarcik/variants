@@ -347,15 +347,17 @@ definitions:
           - null
         description: "OPT - Allowed: 'missing', 'reference'. Set genotypes of failed samples to missing value (.) or reference allele (0)."
       include:
-        type: string
-        description: "predefined ploidy"
+        type: [string, "null"]
+        default: null
+        description: "include only sites for which EXPRESSION is true"
       exclude:
-        type: string
-        description: "predefined ploidy"
+        type: [string, "null"]
+        default: null
+        description: "exclude sites for which EXPRESSION is true"
       trim_alt_alleles:
         type: boolean
         default: false
-        description: "Set to true to recalculate BAQ on the fly, ignore existing BQ tags."
+        description: "Remove alleles not seen in the genotype fields from the ALT column. Note that if no alternate allele remains after trimming, the record itself is not removed but ALT is set to '.' If the option -s or -S is given, removes alleles not seen in the subset. INFO and FORMAT tags declared as Type=A, G or R will be trimmed as well."
     required:
       - multiallelic
       - multi_overlaps
@@ -366,6 +368,7 @@ definitions:
       - set_gts_for_failed
       - include
       - exclude
+      - trim_alt_alleles
     title: VariantsBcftoolsPostfilter
   VariantsIvar:
     type: object

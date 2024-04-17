@@ -86,11 +86,11 @@ variants__bcftools: # Relevant only if bcftools is requested in variants->caller
     multi_overlaps: null # OPT - Allowed: "missing", "reference". Use the reference (0) or missing (.) allele for overlapping alleles after splitting multiallelic sites.
     atomize: False # Whether to split MNVs into consecutive SNVs.
     atom_overlaps: "star" # OPT - Allowed: "missing", "star". Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec.
-    snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
-    indel_gap: 10 # Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
+    snp_gap: 3 # OPT - Filter SNPs within INT base pairs of an indel or other other variant type.
+    indel_gap: 10 # OPT - Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
     set_gts_for_failed: "missing" # OPT - Allowed: "missing", "reference". Set genotypes of failed samples to missing value (.) or reference allele (0).
-    include: 'INFO/DP>=10 & GT="alt" & (DP4[2]+DP4[3])/INFO/DP>=0.50' # Filter which sites to include.
-    exclude: "" # Filter which sites to exclude.
+    include: 'INFO/DP>=10 & GT="alt" & (DP4[2]+DP4[3])/INFO/DP>=0.50' # OPT - Filter which sites to include.
+    exclude: null # OPT - Filter which sites to exclude.
     trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
 
 variants__ivar: # Relevant only if ivar is requested in variants->callers element.
@@ -129,16 +129,16 @@ variants__freebayes: # Relevant only if freebayes is requested in variants->call
   report_monorphic: False # Report even loci which appear to be monomorphic, and report all considered alleles, even those which are not in called genotypes. Loci which do not have any potential alternates have '.' for ALT. Default: False
 
   do_postfilter: True # Whether to postfilter variants.
-  postfilter: # Uses bcftools norm, annotate and filter.
+  postfilter: # Relevant only if do_postfilter is True. Uses bcftools norm, annotate and filter.
     multiallelic: "+any" # OPT - Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
     multi_overlaps: null # OPT - Allowed: "missing", "reference". Use the reference (0) or missing (.) allele for overlapping alleles after splitting multiallelic sites.
     atomize: False # Whether to split MNVs into consecutive SNVs.
     atom_overlaps: "star" # OPT - Allowed: "missing", "star". Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec.
-    snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
-    indel_gap: 10 # Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
+    snp_gap: 3 # OPT - Filter SNPs within INT base pairs of an indel or other other variant type.
+    indel_gap: 10 # OPT - Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
     set_gts_for_failed: "missing" # OPT - Allowed: "missing", "reference". Set genotypes of failed samples to missing value (.) or reference allele (0).
-    include: 'INFO/DP>=10 & GT="alt" & (DP4[2]+DP4[3])/INFO/DP>=0.50' # Filter which sites to include.
-    exclude: "" # Filter which sites to exclude.
+    include: null # OPT - Filter which sites to include.
+    exclude: null # OPT - Filter which sites to exclude.
     trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
 
 consensus__ivar: # Relevant only if ivar is requested in consensus->callers element.

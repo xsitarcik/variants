@@ -115,7 +115,7 @@ variants__freebayes:
     snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
     indel_gap: 10 # Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
     set_gts_for_failed: "missing" # OPT - Allowed: "missing", "reference". Set genotypes of failed samples to missing value (.) or reference allele (0).
-    include: 'INFO/DP>=10 & GT="alt" & (DP4[2]+DP4[3])/INFO/DP>=0.50' # Filter which sites to include.
+    include: "" # Filter which sites to include.
     exclude: "" # Filter which sites to exclude.
     trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
 
