@@ -163,9 +163,9 @@ def get_bcftools_filter_params(tool: str):
     if (value := config[f"variants__{tool}"]["postfilter"]["set_gts_for_failed"]) is not None:
         x = "'.'" if value == "missing" else "0"
         extra.append(f"--set-GTs {x}")
-    if (value := config[f"variants__{tool}"]["postfilter"]["include"]) is not None:
+    if value := config[f"variants__{tool}"]["postfilter"]["include"]:
         extra.append(f"--include '{value}'")
-    if (value := config[f"variants__{tool}"]["postfilter"]["exclude"]) is not None:
+    if value := config[f"variants__{tool}"]["postfilter"]["exclude"]:
         extra.append(f"--exclude '{value}'")
     return " ".join(extra)
 
