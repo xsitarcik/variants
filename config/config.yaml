@@ -12,7 +12,7 @@ mapping:
   _generate_qualimap: [] # OPT - specify which steps to generate qualimap for. Allowed: "mapping", "deduplication" or empty list (default: empty list).
 
 variants:
-  callers: ["bcftools", "ivar"] # Specify method for variant calling. Allowed: "bcftools", "ivar", "freebayes" or empty list.
+  callers: ["bcftools", "ivar", "freebayes"] # Specify method for variant calling. Allowed: "bcftools", "ivar", "freebayes" or empty list.
 
 consensus:
   callers: ["ivar"] # Specify method for consensus calling: "ivar" or empty list.
@@ -68,7 +68,7 @@ reads__decontamination__kraken:
   generate_krona: true # If true, krona is generated from kraken report
   krona_dir: "/data/genome/taxonomy/krona/2023-12-03/" # Directory where krona dataset is located or will be downloaded.
 
-variants__bcftools: # Uses bcftools mpileup and bcftools call.
+variants__bcftools: # Relevant only if bcftools is requested in variants->callers element.
   min_base_quality: 0 # Minimum base quality for a base to be considered.
   min_mapping_quality: 13 # Minimum mapping quality for an alignment to be used.
   adjust_quality_coef: 50 # Adjust quality for high number of mismatches. See bcftools manual. Set to 0 to disable.
@@ -81,7 +81,7 @@ variants__bcftools: # Uses bcftools mpileup and bcftools call.
   format_fields: "GQ,GP" # Comma-separated list of FORMAT fields to output for each sample.
 
   do_postfilter: True # Whether to postfilter variants.
-  postfilter: # Uses bcftools norm, annotate and filter.
+  postfilter: # Relevant only if do_postfilter is True. Uses bcftools norm, annotate and filter.
     multiallelic: "+any" # OPT - Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
     multi_overlaps: null # OPT - Allowed: "missing", "reference". Use the reference (0) or missing (.) allele for overlapping alleles after splitting multiallelic sites.
     atomize: False # Whether to split MNVs into consecutive SNVs.
@@ -93,7 +93,7 @@ variants__bcftools: # Uses bcftools mpileup and bcftools call.
     exclude: "" # Filter which sites to exclude.
     trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
 
-variants__ivar:
+variants__ivar: # Relevant only if ivar is requested in variants->callers element.
   count_orphans: false # Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
   max_read_depth: 600000 # Limits the number of reads to load in memory per input file.
   min_base_quality: 13 # Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality.
@@ -109,7 +109,7 @@ variants__ivar:
     max_alt_freq: 0.9 # Mixed positions cannot have ALT_FREQ value equal or larger than this.
     min_total_depth: 10 # Mixed positions must have at least this TOTAL_DP value.
 
-variants__freebayes:
+variants__freebayes: # Relevant only if freebayes is requested in variants->callers element.
   min_mapping_quality: 30 # Exclude alignments from analysis if they have a mapping quality less than Q. Default: 30.
   min_base_quality: 20 # Exclude alleles from analysis if their supporting base quality is less than Q. Default: 20.
   mismatch_base_quality_threshold: 10 # Count mismatches with base quality higher than this. Default: 10.
@@ -141,7 +141,7 @@ variants__freebayes:
     exclude: "" # Filter which sites to exclude.
     trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
 
-consensus__ivar:
+consensus__ivar: # Relevant only if ivar is requested in consensus->callers element.
   count_orphans: false # Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
   max_read_depth: 1000 # limits the number of reads to load in memory per input file.
   min_base_quality: 13 # minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality.

@@ -161,7 +161,8 @@ def get_bcftools_filter_params(tool: str):
     if value := config[f"variants__{tool}"]["postfilter"]["indel_gap"]:
         extra.append(f"--IndelGap {value}")
     if value := config[f"variants__{tool}"]["postfilter"].get("set_gts_for_failed", False):
-        extra.append(f"--set-GTs {value}")
+        x = "'.'" if value == "missing" else "0"
+        extra.append(f"--set-GTs {x}")
     if value := config[f"variants__{tool}"]["postfilter"].get("include", False):
         extra.append(f"--include '{value}'")
     if value := config[f"variants__{tool}"]["postfilter"].get("exclude", False):
