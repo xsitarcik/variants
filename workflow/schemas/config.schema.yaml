@@ -22,6 +22,10 @@ definitions:
         type: object
         default: {}
         "$ref": "#/definitions/VariantsIvar"
+      variants__freebayes:
+        type: object
+        default: {}
+        "$ref": "#/definitions/VariantsFreebayes"
       consensus__ivar:
         type: object
         default: {}
@@ -29,6 +33,9 @@ definitions:
       module_versions:
         type: object
         "$ref": "#/definitions/ModuleVersions"
+      resources:
+        type: object
+        "$ref": "#/definitions/Resources"
     title: VariantsWorkflow
     allOf:
       - if:
@@ -46,6 +53,24 @@ definitions:
                 - variants__bcftools
           required:
             - variants__bcftools
+      - if:
+          properties:
+            variants:
+              properties:
+                callers:
+                  contains:
+                    type: string
+                    const: "freebayes"
+        then:
+          properties:
+            threads:
+              required:
+                - variants__freebayes
+            resources:
+              required:
+                - variants__freebayes_mem_mb
+          required:
+            - variants__freebayes
       - if:
           properties:
             variants:
@@ -72,6 +97,8 @@ definitions:
       - module_versions
       - consensus
       - variants
+      - threads
+      - resources
   Variants:
     additionalProperties: false
     title: Variants
@@ -84,6 +111,7 @@ definitions:
           enum:
             - "bcftools"
             - "ivar"
+            - "freebayes"
     required:
       - callers
   Consensus:
@@ -99,6 +127,78 @@ definitions:
             - "ivar"
     required:
       - callers
+  VariantsFreebayes:
+    type: object
+    additionalProperties: false
+    properties:
+      min_mapping_quality:
+        type: integer
+        default: 30
+        description: "Exclude alignments from analysis if they have a mapping quality less than Q."
+      min_base_quality:
+        type: integer
+        default: 20
+        description: "Exclude alleles from analysis if their supporting base quality is less than Q."
+      mismatch_base_quality_threshold:
+        type: integer
+        default: 10
+        description: "Count mismatches with base quality higher than this."
+      read_mismatch_limit:
+        type: [integer, "null"]
+        default: "null"
+        description: "Exclude reads with more than N mismatches where each mismatch has base quality >= mismatch-base-quality-threshold."
+      read_max_mismatch_fraction:
+        type: number
+        default: 1.0
+        description: "Exclude reads with more than N [0,1] fraction of mismatches where each mismatch has base quality >= mismatch-base-quality-threshold."
+      read_indel_limit:
+        type: [integer, "null"]
+        default: "null"
+        description: "Exclude reads with more than N separate gaps."
+      read_snp_limit:
+        type: [integer, "null"]
+        default: "null"
+        description: "Exclude reads with more than N base mismatches, ignoring gaps, and quality higher than `mismatch_base_quality_threshold`."
+      indel_exclusion_window:
+        type: integer
+        default: 0
+        description: "Ignore portions of alignments this many bases from a putative insertion or deletion allele."
+      min_alternate_fraction:
+        type: number
+        default: 0.05
+        description: "Require at least this fraction of observations supporting an alternate allele within a single individual in the in order to evaluate the position."
+      min_alternate_count:
+        type: integer
+        default: 2
+        description: "Require at least this count of observations supporting an alternate allele within a single individual in order to evaluate the position."
+      min_coverage:
+        type: integer
+        default: 10
+        description: "Require at least this coverage to process a site."
+      limit_coverage:
+        type: [integer, "null"]
+        default: "null"
+        description: "Downsample per-sample coverage to this level if greater than this coverage."
+      skip_coverage:
+        type: [integer, "null"]
+        default: "null"
+        description: "Skip processing of alignments overlapping positions with coverage >N. This filters sites above this coverage, but will also reduce data nearby."
+      ploidy:
+        type: integer
+        default: 2
+        description: "Sets the default ploidy for the analysis to N. Default: 2"
+      gvcf:
+        type: boolean
+        default: false
+        description: "Write gVCF output, which indicates coverage in uncalled regions, emitting a record for all bases. Default: False."
+      report_all_haplotype_alleles:
+        type: boolean
+        default: false
+        description: "At sites where genotypes are made over haplotype alleles, provide information about all alleles in output, not only those which are called. Default: False."
+      report_monorphic:
+        type: boolean
+        default: false
+        description: "Report even loci which appear to be monomorphic, and report all considered alleles, even those which are not in called genotypes. Loci which do not have any potential alternates have '.' for ALT. Default: False"
   VariantsBcftools:
     type: object
     additionalProperties: false
@@ -312,13 +412,26 @@ definitions:
         default: 10
         description: "Minimum depth to call consensus"
     title: ConsensusIvar
+  Resources:
+    type: object
+    additionalProperties: true
+    properties:
+      variants__freebayes_mem_mb:
+        type: integer
+        default: 4096
+        description: "Number of memory in megabytes to allocate for freebayes"
+    title: Resources
   Threads:
     additionalProperties: true
     properties:
       variants__bcftools:
         type: integer
         default: 1
-        description: "Number of threads to use for mapping"
+        description: "Number of threads to use for bcftools variants"
+      variants__freebayes:
+        type: integer
+        default: 1
+        description: "Number of threads to use for freebayes variants"
     title: Threads
   ModuleVersions:
     type: object

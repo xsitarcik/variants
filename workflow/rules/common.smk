@@ -189,8 +189,73 @@ def parse_ivar_params_for_consensus():
     return " ".join(ivar_params)
 
 
+def parse_freebayes_params():
+    extra = []
+
+    if val := config["variants__freebayes"]["min_base_quality"]:
+        extra.append(f"--min-base-quality {val}")
+
+    if val := config["variants__freebayes"]["min_mapping_quality"]:
+        extra.append(f"--min-mapping-quality {val}")
+
+    if val := config["variants__freebayes"]["mismatch_base_quality_threshold"]:
+        extra.append(f"--mismatch-base-quality-threshold {val}")
+
+    if val := config["variants__freebayes"]["read_max_mismatch_fraction"]:
+        extra.append(f"--read-max-mismatch-fraction {val}")
+
+    if (val := config["variants__freebayes"]["read_mismatch_limit"]) is not None:
+        extra.append(f"--read-mismatch-limit {val}")
+
+    if (val := config["variants__freebayes"]["read_indel_limit"]) is not None:
+        extra.append(f"--read-indel-limit {val}")
+
+    if (val := config["variants__freebayes"]["read_snp_limit"]) is not None:
+        extra.append(f"--read-snp-limit {val}")
+
+    if val := config["variants__freebayes"]["indel_exclusion_window"]:
+        extra.append(f"--indel-exclusion-window {val}")
+
+    if val := config["variants__freebayes"]["min_alternate_fraction"]:
+        extra.append(f"--min-alternate-fraction {val}")
+
+    if val := config["variants__freebayes"]["min_alternate_count"]:
+        extra.append(f"--min-alternate-count {val}")
+
+    if val := config["variants__freebayes"]["min_coverage"]:
+        extra.append(f"--min-coverage {val}")
+
+    if (val := config["variants__freebayes"]["limit_coverage"]) is not None:
+        extra.append(f"--limit-coverage {val}")
+
+    if (val := config["variants__freebayes"]["skip_coverage"]) is not None:
+        extra.append(f"--skip-coverage {val}")
+
+    if val := config["variants__freebayes"]["ploidy"]:
+        extra.append(f"--ploidy {val}")
+
+    if config["variants__freebayes"]["gvcf"]:
+        extra.append("--gvcf")
+
+    if config["variants__freebayes"]["report_all_haplotype_alleles"]:
+        extra.append("--report-all-haplotype-alleles")
+
+    if config["variants__freebayes"]["report_monorphic"]:
+        extra.append("--report-monomorphic")
+
+    return " ".join(extra)
+
+
 ### Resource handling #################################################################################################
 
 
 def get_threads_for_bcftools():
     return min(config["threads"]["variants__bcftools"], config["max_threads"])
+
+
+def get_threads_for_freebayes():
+    return min(config["threads"]["variants__freebayes"], config["max_threads"])
+
+
+def get_mem_mb_for_freebayes(wildcards, attempt):
+    return min(config["max_mem_mb"], config["resources"]["variants__freebayes_mem_mb"] * attempt)
