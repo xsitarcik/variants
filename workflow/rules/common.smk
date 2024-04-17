@@ -63,7 +63,7 @@ def get_outputs():
             )
     if "freebayes" in config["variants"]["callers"]:
         outputs["variants_ivar"] = expand(
-            "results/variants_freebayes/{reference}/{sample}.tsv", sample=sample_names, reference=references
+            "results/variants_freebayes/{reference}/{sample}.vcf", sample=sample_names, reference=references
         )
 
     if "ivar" in config["consensus"]["callers"]:
