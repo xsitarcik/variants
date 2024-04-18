@@ -13,7 +13,7 @@ rule bcftools__mpileup_bcf:
     log:
         "logs/variants_bcftools/mpileup_bcf/{reference}/{sample}.log",
     wrapper:
-        "v3.3.3/bio/bcftools/mpileup"
+        "v3.7.0/bio/bcftools/mpileup"
 
 
 rule bcftools__call_variants:
@@ -28,7 +28,7 @@ rule bcftools__call_variants:
     log:
         "logs/variants_bcftools/call_variants/{reference}/{sample}.log",
     wrapper:
-        "v3.3.3/bio/bcftools/call"
+        "v3.7.0/bio/bcftools/call"
 
 
 rule gatk__prepare_vcf:
@@ -44,7 +44,7 @@ rule gatk__prepare_vcf:
         extra="",  #"--select-type-to-include SNP",  # optional filter arguments, see GATK docs
         java_opts="",  # optional
     wrapper:
-        "v3.3.3/bio/gatk/selectvariants"
+        "v3.7.0/bio/gatk/selectvariants"
 
 
 rule bcftools__normalize_vcf:
@@ -56,12 +56,12 @@ rule bcftools__normalize_vcf:
         temp("results/variants_bcftools/{reference}/normalized/{sample}.norm.bcf"),
     params:
         uncompressed_bcf=True,
-        extra=get_bcftools_norm_params(),
+        extra=get_bcftools_norm_params("bcftools"),
     log:
         "logs/variants_bcftools/normalize_vcf/{reference}/{sample}.log",
     threads: get_threads_for_bcftools()
     wrapper:
-        "v3.3.3/bio/bcftools/norm"
+        "v3.7.0/bio/bcftools/norm"
 
 
 rule bcftools__annotate_vcf:
@@ -96,12 +96,12 @@ rule bcftools__filter_vcf:
     output:
         temp("results/variants_bcftools/{reference}/filtered/{sample}.filtered.bcf"),
     params:
-        extra=get_bcftools_filter_params(),
+        extra=get_bcftools_filter_params("bcftools"),
     log:
         "logs/variants_bcftools/filter_vcf/{reference}/{sample}.log",
     threads: get_threads_for_bcftools()
     wrapper:
-        "v3.3.3/bio/bcftools/filter"
+        "v3.7.0/bio/bcftools/filter"
 
 
 rule bcftools__view_filtered_vcf:
@@ -116,9 +116,9 @@ rule bcftools__view_filtered_vcf:
             },
         ),
     params:
-        extra=get_bcftools_view_filter_params(),
+        extra=get_bcftools_view_filter_params("bcftools"),
     log:
         "logs/variants_bcftools/view_filtered_vcf/{reference}/{sample}.log",
     threads: get_threads_for_bcftools()
     wrapper:
-        "v3.3.3/bio/bcftools/view"
+        "v3.7.0/bio/bcftools/view"

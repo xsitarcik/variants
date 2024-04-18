@@ -61,6 +61,19 @@ def get_outputs():
             outputs["variants_ivar"] = expand(
                 "results/variants_ivar/{reference}/{sample}/all.vcf", sample=sample_names, reference=references
             )
+    if "freebayes" in config["variants"]["callers"]:
+        if config["variants__freebayes"]["do_postfilter"]:
+            outputs["variants_freebayes"] = expand(
+                "results/variants_freebayes/{reference}/{sample}/filtered.vcf",
+                sample=sample_names,
+                reference=references,
+            )
+        else:
+            outputs["variants_freebayes"] = expand(
+                "results/variants_freebayes/{reference}/{sample}/original.vcf",
+                sample=sample_names,
+                reference=references,
+            )
 
     if "ivar" in config["consensus"]["callers"]:
         outputs["consensus_ivar"] = expand(
@@ -114,38 +127,53 @@ def get_bcftools_calling_params():
     return " ".join(extra)
 
 
-def get_bcftools_norm_params():
-    if not config["variants__bcftools"]["do_postfilter"]:
+def get_bcftools_norm_params(tool: str):
+    # common function to parse tool normalization params
+    if not config[f"variants__{tool}"]["do_postfilter"]:
         return ""
 
-    base = "--check-ref w"
-    if form := config["variants__bcftools"]["postfilter"]["multiallelic"]:
-        return base + f" --multiallelics {form}"
-    return base
+    cmd = "--check-ref w"
+    if form := config[f"variants__{tool}"]["postfilter"]["multiallelic"]:
+        cmd += f" --multiallelics {form}"
+
+        if form := config[f"variants__{tool}"]["postfilter"]["multi_overlaps"]:
+            x = "'.'" if form == "missing" else "0"
+            cmd += f" --multi-overlaps {x}"
+
+    if config[f"variants__{tool}"]["postfilter"]["atomize"]:
+        x = "'.'" if form == "missing" else "0"
+        cmd += f" --multi-overlaps {x}"
+
+        if kind := config[f"variants__{tool}"]["postfilter"]["atom_overlaps"]:
+            x = "." if kind == "missing" else "\*"
+            cmd += f" --atom-overlaps {x}"
+    return cmd
 
 
-def get_bcftools_filter_params():
-    if not config["variants__bcftools"]["do_postfilter"]:
+def get_bcftools_filter_params(tool: str):
+    # common function to parse tool filtering params
+    if not config[f"variants__{tool}"]["do_postfilter"]:
         return ""
 
     extra = []
-    if value := config["variants__bcftools"]["postfilter"]["snp_gap"]:
+    if (value := config[f"variants__{tool}"]["postfilter"]["snp_gap"]) is not None:
         extra.append(f"--SnpGap {value}")
-    if value := config["variants__bcftools"]["postfilter"]["indel_gap"]:
+    if (value := config[f"variants__{tool}"]["postfilter"]["indel_gap"]) is not None:
         extra.append(f"--IndelGap {value}")
-    if value := config["variants__bcftools"]["postfilter"].get("set_gts_for_failed", False):
-        extra.append(f"--set-GTs {value}")
-    if value := config["variants__bcftools"]["postfilter"].get("include", False):
+    if (value := config[f"variants__{tool}"]["postfilter"]["set_gts_for_failed"]) is not None:
+        x = "'.'" if value == "missing" else "0"
+        extra.append(f"--set-GTs {x}")
+    if value := config[f"variants__{tool}"]["postfilter"]["include"]:
         extra.append(f"--include '{value}'")
-    if value := config["variants__bcftools"]["postfilter"].get("exclude", False):
+    if value := config[f"variants__{tool}"]["postfilter"]["exclude"]:
         extra.append(f"--exclude '{value}'")
     return " ".join(extra)
 
 
-def get_bcftools_view_filter_params():
-    if not config["variants__bcftools"]["do_postfilter"]:
+def get_bcftools_view_filter_params(tool: str):
+    if not config[f"variants__{tool}"]["do_postfilter"]:
         return ""
-    return "--trim-alt-alleles" if config["variants__bcftools"]["postfilter"]["trim_alt_alleles"] else ""
+    return "--trim-alt-alleles" if config[f"variants__{tool}"]["postfilter"]["trim_alt_alleles"] else ""
 
 
 def parse_samtools_params_for_variants():
@@ -189,8 +217,73 @@ def parse_ivar_params_for_consensus():
     return " ".join(ivar_params)
 
 
+def parse_freebayes_params():
+    extra = []
+
+    if val := config["variants__freebayes"]["min_base_quality"]:
+        extra.append(f"--min-base-quality {val}")
+
+    if val := config["variants__freebayes"]["min_mapping_quality"]:
+        extra.append(f"--min-mapping-quality {val}")
+
+    if val := config["variants__freebayes"]["mismatch_base_quality_threshold"]:
+        extra.append(f"--mismatch-base-quality-threshold {val}")
+
+    if val := config["variants__freebayes"]["read_max_mismatch_fraction"]:
+        extra.append(f"--read-max-mismatch-fraction {val}")
+
+    if (val := config["variants__freebayes"]["read_mismatch_limit"]) is not None:
+        extra.append(f"--read-mismatch-limit {val}")
+
+    if (val := config["variants__freebayes"]["read_indel_limit"]) is not None:
+        extra.append(f"--read-indel-limit {val}")
+
+    if (val := config["variants__freebayes"]["read_snp_limit"]) is not None:
+        extra.append(f"--read-snp-limit {val}")
+
+    if val := config["variants__freebayes"]["indel_exclusion_window"]:
+        extra.append(f"--indel-exclusion-window {val}")
+
+    if val := config["variants__freebayes"]["min_alternate_fraction"]:
+        extra.append(f"--min-alternate-fraction {val}")
+
+    if val := config["variants__freebayes"]["min_alternate_count"]:
+        extra.append(f"--min-alternate-count {val}")
+
+    if val := config["variants__freebayes"]["min_coverage"]:
+        extra.append(f"--min-coverage {val}")
+
+    if (val := config["variants__freebayes"]["limit_coverage"]) is not None:
+        extra.append(f"--limit-coverage {val}")
+
+    if (val := config["variants__freebayes"]["skip_coverage"]) is not None:
+        extra.append(f"--skip-coverage {val}")
+
+    if val := config["variants__freebayes"]["ploidy"]:
+        extra.append(f"--ploidy {val}")
+
+    if config["variants__freebayes"]["gvcf"]:
+        extra.append("--gvcf")
+
+    if config["variants__freebayes"]["report_all_haplotype_alleles"]:
+        extra.append("--report-all-haplotype-alleles")
+
+    if config["variants__freebayes"]["report_monorphic"]:
+        extra.append("--report-monomorphic")
+
+    return " ".join(extra)
+
+
 ### Resource handling #################################################################################################
 
 
 def get_threads_for_bcftools():
     return min(config["threads"]["variants__bcftools"], config["max_threads"])
+
+
+def get_threads_for_freebayes():
+    return min(config["threads"]["variants__freebayes"], config["max_threads"])
+
+
+def get_mem_mb_for_freebayes(wildcards, attempt):
+    return min(config["max_mem_mb"], config["resources"]["variants__freebayes_mem_mb"] * attempt)

@@ -12,7 +12,7 @@ mapping:
   _generate_qualimap: [] # OPT - specify which steps to generate qualimap for. Allowed: "mapping", "deduplication" or empty list (default: empty list).
 
 variants:
-  callers: ["bcftools", "ivar"] # Specify method for variant calling: "bcftools", "ivar".
+  callers: ["bcftools", "ivar", "freebayes"] # Specify method for variant calling: "bcftools", "ivar".
 
 consensus:
   callers: ["ivar"]
@@ -60,9 +60,12 @@ variants__bcftools: # Uses bcftools mpileup and bcftools call.
   do_postfilter: True # Whether to postfilter variants.
   postfilter: # Uses bcftools norm, annotate and filter.
     multiallelic: "+any" # Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
+    multi_overlaps: null # OPT - Allowed: "missing", "reference". Use the reference (0) or missing (.) allele for overlapping alleles after splitting multiallelic sites.
+    atomize: False # Whether to split MNVs into consecutive SNVs.
+    atom_overlaps: "star" # OPT - Allowed: "missing", "star". Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec.
     snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
     indel_gap: 10 # Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
-    set_gts_for_failed: "." # Either missing value '.'  or reference allele ('0').
+    set_gts_for_failed: "missing" # Either missing value '.'  or reference allele ('0').
     include: 'INFO/DP>=10 & GT="alt" & (DP4[2]+DP4[3])/INFO/DP>=0.50' # Filter which sites to include.
     exclude: "" # Filter which sites to include.
     trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
@@ -82,6 +85,39 @@ variants__ivar:
     min_alt_freq: 0.1 # Mixed positions must have at least this ALT_FREQ value.
     max_alt_freq: 0.9 # Mixed positions cannot have ALT_FREQ value equal or larger than this.
     min_total_depth: 10 # Mixed positions must have at least this TOTAL_DP value.
+
+variants__freebayes:
+  # input filters for freebayes
+  min_mapping_quality: 30 # Exclude alignments from analysis if they have a mapping quality less than Q. Default: 30.
+  min_base_quality: 20 # Exclude alleles from analysis if their supporting base quality is less than Q. Default: 20.
+  mismatch_base_quality_threshold: 10 # Count mismatches with base quality higher than this. Default: 10.
+  read_mismatch_limit: null # OPT - Exclude reads with more than N mismatches where each mismatch has base quality >= mismatch-base-quality-threshold. Default: null.
+  read_max_mismatch_fraction: 1.0 # Exclude reads with more than N [0,1] fraction of mismatches where each mismatch has base quality >= mismatch-base-quality-threshold. Default: 1.0.
+  read_indel_limit: null # OPT - Exclude reads with more than N separate gaps. Default: null.
+  read_snp_limit: null # OPT - Exclude reads with more than N base mismatches, ignoring gaps, and quality higher than `mismatch_base_quality_threshold`. Default: null.
+  indel_exclusion_window: 0 # Ignore portions of alignments this many bases from a putative insertion or deletion allele. Default: 0.
+  min_alternate_fraction: 0.05 # Require at least this fraction of observations supporting an alternate allele within a single individual in the in order to evaluate the position. Default: 0.05.
+  min_alternate_count: 2 # Require at least this count of observations supporting an alternate allele within a single individual in order to evaluate the position. Default: 2.
+  min_coverage: 10 # Require at least this coverage to process a site. Default: 0.
+  limit_coverage: null # OPT - Integer. Downsample per-sample coverage to this level if greater than this coverage. Default: null.
+  skip_coverage: null # OPT - Integer. Skip processing of alignments overlapping positions with coverage >N. This filters sites above this coverage, but will also reduce data nearby. Default: null.
+  ploidy: 2 # Sets the default ploidy for the analysis to N. Default: 2
+  gvcf: False # Write gVCF output, which indicates coverage in uncalled regions, emitting a record for all bases. Default: False.
+  report_all_haplotype_alleles: False # At sites where genotypes are made over haplotype alleles, provide information about all alleles in output, not only those which are called. Default: False.
+  report_monorphic: False # Report even loci which appear to be monomorphic, and report all considered alleles, even those which are not in called genotypes. Loci which do not have any potential alternates have '.' for ALT. Default: False
+
+  do_postfilter: True # Whether to postfilter variants.
+  postfilter: # Uses bcftools norm, annotate and filter.
+    multiallelic: "+any" # OPT - Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
+    multi_overlaps: null # OPT - Allowed: "missing", "reference". Use the reference (0) or missing (.) allele for overlapping alleles after splitting multiallelic sites.
+    atomize: False # Whether to split MNVs into consecutive SNVs.
+    atom_overlaps: "star" # OPT - Allowed: "missing", "star". Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec.
+    snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
+    indel_gap: 10 # Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
+    set_gts_for_failed: "missing" # OPT - Allowed: "missing", "reference". Set genotypes of failed samples to missing value (.) or reference allele (0).
+    include: "" # Filter which sites to include.
+    exclude: "" # Filter which sites to exclude.
+    trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
 
 consensus__ivar:
   count_orphans: false # Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
@@ -104,6 +140,7 @@ resources:
   mapping__indexing_mem_mb: 4096
   mapping__deduplication_mem_mb: 4096
   mapping__qualimap_mem_mb: 4096
+  variants__freebayes_mem_mb: 4096
 
 threads:
   reads__trimming: 4
@@ -113,6 +150,7 @@ threads:
   mapping__mapping: 4
   mapping__indexing: 2
   variants__bcftools: 2
+  variants__freebayes: 4
 
 module_versions:
   reads: "v3.2.1"
