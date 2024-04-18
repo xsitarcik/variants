@@ -42,44 +42,27 @@ def get_outputs():
 
     outputs = {}
     if "bcftools" in config["variants"]["callers"]:
-        if config["variants__bcftools"]["do_postfilter"]:
-            outputs["variants_bcftools"] = expand(
-                "results/variants_bcftools/{reference}/filtered/{sample}.vcf", sample=sample_names, reference=references
-            )
-        else:
-            outputs["variants_bcftools"] = expand(
-                "results/variants_bcftools/{reference}/normalized/{sample}.vcf",
-                sample=sample_names,
-                reference=references,
-            )
+        step = "filtered" if config["variants__bcftools"]["do_postfilter"] else "all"
+        outputs["variants_bcftools"] = expand(
+            f"results/variants/{{reference}}/{{sample}}/bcftools_{step}.vcf", sample=sample_names, reference=references
+        )
     if "ivar" in config["variants"]["callers"]:
-        if config["variants__ivar"]["do_postfilter"]:
-            outputs["variants_ivar"] = expand(
-                "results/variants_ivar/{reference}/{sample}/filtered.html", sample=sample_names, reference=references
-            )
-        else:
-            outputs["variants_ivar"] = expand(
-                "results/variants_ivar/{reference}/{sample}/all.vcf", sample=sample_names, reference=references
-            )
-    if "freebayes" in config["variants"]["callers"]:
-        if config["variants__freebayes"]["do_postfilter"]:
-            outputs["variants_freebayes"] = expand(
-                "results/variants_freebayes/{reference}/{sample}/filtered.vcf",
-                sample=sample_names,
-                reference=references,
-            )
-        else:
-            outputs["variants_freebayes"] = expand(
-                "results/variants_freebayes/{reference}/{sample}/original.vcf",
-                sample=sample_names,
-                reference=references,
-            )
-
-    if "mutect2" in config["variants"]["callers"]:
-        outputs["variants_mutect2"] = expand(
-            "results/variants_mutect2/{reference}/{sample}/filtered.vcf",
+        step = "filtered" if config["variants__ivar"]["do_postfilter"] else "all"
+        outputs["variants_ivar"] = expand(
+            f"results/variants/{{reference}}/{{sample}}/ivar_{step}.{{ext}}",
             sample=sample_names,
             reference=references,
+            ext=["html", "vcf"],
+        )
+    if "freebayes" in config["variants"]["callers"]:
+        step = "filtered" if config["variants__freebayes"]["do_postfilter"] else "all"
+        outputs["variants_freebayes"] = expand(
+            f"results/variants/{{reference}}/{{sample}}/freebayes_{step}.vcf", sample=sample_names, reference=references
+        )
+    if "mutect2" in config["variants"]["callers"]:
+        step = "filtered" if config["variants__mutect2"]["do_postfilter"] else "all"
+        outputs["variants_mutect2"] = expand(
+            f"results/variants/{{reference}}/{{sample}}/mutect2_{step}.vcf", sample=sample_names, reference=references
         )
 
     if "ivar" in config["consensus"]["callers"]:
@@ -107,7 +90,7 @@ def infer_reference_faidx(wildcards):
 ### Parameter parsing from config #####################################################################################
 
 
-def get_bcftools_mpileup_params():
+def get_bcftools_mpileup_params():  # TODO CHECK PARAMS
     extra = [
         "--min-MQ {val}".format(val=config["variants__bcftools"]["min_mapping_quality"]),
         "--min-BQ {val}".format(val=config["variants__bcftools"]["min_base_quality"]),
@@ -127,10 +110,10 @@ def get_bcftools_calling_params():
         extra.append("--keep-alts")
     if config["variants__bcftools"]["variants_only"]:
         extra.append("--variants-only")
-    if form := config["variants__bcftools"]["ploidy"]:
-        extra.append(f"--ploidy {form}")
-    if fields := config["variants__bcftools"]["format_fields"]:
-        extra.append(f"--format-fields {fields}")
+    extra.append(f'--ploidy {config["variants__bcftools"]["ploidy"]}')
+    extra.append(f'--prior {config["variants__bcftools"]["prior"]}')
+    if fields := config["variants__bcftools"]["annotate"]:
+        extra.append(f"--annotate {','.join(fields)}")
     return " ".join(extra)
 
 
@@ -281,6 +264,39 @@ def parse_freebayes_params():
     return " ".join(extra)
 
 
+def parse_mutect2_call_params():
+    extra = [
+        "--create-output-variant-index",
+        f'--base-quality-score-threshold {config["variants__mutect2"]["base_quality_score_threshold"]}',
+        f'--callable-depth {config["variants__mutect2"]["callable_depth"]}',
+        f'--f1r2-max-depth {config["variants__mutect2"]["f1r2_max_depth"]}',
+        f'--f1r2-median-mq {config["variants__mutect2"]["f1r2_median_mq"]}',
+        f'--f1r2-min-bq {config["variants__mutect2"]["f1r2_min_bq"]}',
+        f'--min-base-quality-score {config["variants__mutect2"]["min_base_quality_score"]}',
+        f'--max-reads-per-alignment-start {config["variants__mutect2"]["max_reads_per_alignment_start"]}',
+    ]
+    return " ".join(extra)
+
+
+def parse_mutect2_filter_params():
+    if not config["variants__mutect2"]["do_postfilter"]:
+        return ""
+
+    cfg = config["variants__mutect2"]["postfilter"]
+    extra = [
+        "--create-output-variant-index",
+        f'--min-median-base-quality {cfg["min_median_base_quality"]}',
+        f'--min-median-mapping-quality {cfg["min_median_mapping_quality"]}',
+        f'--min-median-read-position {cfg["min_median_read_position"]}',
+        f'--min-reads-per-strand {cfg["min_reads_per_strand"]}',
+        f'--min-slippage-length {cfg["min_slippage_length"]}',
+        f'--pcr-slippage-rate {cfg["pcr_slippage_rate"]}',
+    ]
+    if cfg["microbial_mode"]:
+        extra.append("--microbial-mode")
+    return " ".join(extra)
+
+
 ### Resource handling #################################################################################################
 
 
@@ -298,3 +314,7 @@ def get_threads_for_mutect2():
 
 def get_mem_mb_for_freebayes(wildcards, attempt):
     return min(config["max_mem_mb"], config["resources"]["variants__freebayes_mem_mb"] * attempt)
+
+
+def get_mem_mb_for_mutect2(wildcards, attempt):
+    return min(config["max_mem_mb"], config["resources"]["variants__mutect2_mem_mb"] * attempt)

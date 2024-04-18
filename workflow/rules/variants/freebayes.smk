@@ -5,9 +5,9 @@ rule freebayes__call_vcf:
         ref=infer_reference_fasta,
         index=infer_reference_faidx,
     output:
-        vcf=temp("results/variants_freebayes/{reference}/{sample}/original.vcf"),
+        vcf=temp("results/variants/{reference}/{sample}/freebayes_all.vcf"),
     log:
-        "logs/freebayes/call_vcf/{reference}/{sample}.log",
+        "logs/variants_freebayes/call_vcf/{reference}/{sample}.log",
     params:
         normalize=get_bcftools_norm_params("freebayes"),
         extra=parse_freebayes_params(),
@@ -20,9 +20,9 @@ rule freebayes__call_vcf:
 
 rule freebayes__annotate_vcf:
     input:
-        "results/variants_freebayes/{reference}/{sample}/original.vcf",
+        "results/variants/{reference}/{sample}/freebayes_all.vcf",
     output:
-        temp("results/variants_freebayes/{reference}/{sample}/annot.vcf"),
+        temp("results/variants/{reference}/{sample}/freebayes_annot.vcf"),
     log:
         "logs/variants_freebayes/annotate_vcf/{reference}/{sample}.log",
     conda:
@@ -33,11 +33,11 @@ rule freebayes__annotate_vcf:
 
 rule freebayes__fill_tags:
     input:
-        "results/variants_freebayes/{reference}/{sample}/annot.vcf",
+        "results/variants/{reference}/{sample}/freebayes_annot.vcf",
     output:
-        temp("results/variants_freebayes/{reference}/{sample}/filled.vcf"),
+        temp("results/variants/{reference}/{sample}/freebayes_filled.vcf"),
     log:
-        "logs/variants_freebayes/tag_fill/{reference}/{sample}.log",
+        "logs/variants_freebayes/fill_tags/{reference}/{sample}.log",
     conda:
         "../../envs/bcftools.yaml"
     shell:
@@ -46,9 +46,9 @@ rule freebayes__fill_tags:
 
 rule freebayes__filter_vcf:
     input:
-        "results/variants_freebayes/{reference}/{sample}/filled.vcf",
+        "results/variants/{reference}/{sample}/freebayes_filled.vcf",
     output:
-        temp("results/variants_freebayes/{reference}/{sample}/filtered.bcf"),
+        temp("results/variants/{reference}/{sample}/freebayes_filtered.bcf"),
     params:
         extra=get_bcftools_filter_params("freebayes"),
     log:
@@ -58,12 +58,12 @@ rule freebayes__filter_vcf:
         "v3.7.0/bio/bcftools/filter"
 
 
-rule freebayes__view_filtered_vcf:
+rule freebayes__view_filtered:
     input:
-        "results/variants_freebayes/{reference}/{sample}/filtered.bcf",
+        "results/variants/{reference}/{sample}/freebayes_filtered.bcf",
     output:
         report(
-            "results/variants_freebayes/{reference}/{sample}/filtered.vcf",
+            "results/variants/{reference}/{sample}/freebayes_filtered.vcf",
             category="{sample} - {reference}",
             labels={
                 "Type": "Variants - freebayes/filtered",
@@ -72,7 +72,7 @@ rule freebayes__view_filtered_vcf:
     params:
         extra=get_bcftools_view_filter_params("freebayes"),
     log:
-        "logs/variants_freebayes/view_filtered_vcf/{reference}/{sample}.log",
+        "logs/variants_freebayes/view_filtered/{reference}/{sample}.log",
     threads: get_threads_for_freebayes()
     wrapper:
         "v3.7.0/bio/bcftools/view"

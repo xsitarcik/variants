@@ -1,13 +1,10 @@
-# https://snakemake-wrappers.readthedocs.io/en/stable/meta-wrappers/gatk_mutect2_calling.html
-
-
-rule custom__create_wgs_bed_file:
+rule mutect2__create_wgs_bed_file:
     input:
         fai=infer_reference_faidx,
     output:
-        bed="results/variants_mutect2/{reference}/regions.bed",
+        bed="results/variants/{reference}/regions.bed",
     log:
-        "logs/custom/create_wgs_bed_file/{reference}.log",
+        "logs/variants_mutect2/create_wgs_bed_file/{reference}.log",
     localrule: True
     conda:
         "../../envs/awk_sed.yaml"
@@ -15,47 +12,46 @@ rule custom__create_wgs_bed_file:
         "(awk '{{print $1, 1, $2, $1}}' {input.fai} | sed 's/ /\t/g' > {output.bed}) 2> {log}"
 
 
-rule picard__bed_to_interval_list:
+rule mutect2__bed_to_interval_list:
     input:
-        bed="results/variants_mutect2/{reference}/regions.bed",
+        bed="results/variants/{reference}/regions.bed",
         dict=infer_reference_dict,
     output:
-        intervals="results/variants_mutect2/{reference}/regions.interval_list",
+        intervals="results/variants/{reference}/regions.interval_list",
     log:
-        "logs/picard/bed_to_interval_list/{reference}.log",
+        "logs/variants_mutect2/bed_to_interval_list/{reference}.log",
     params:
         extra="--SORT true --UNIQUE true",
     resources:
-        mem_mb=1024,
+        mem_mb=get_mem_mb_for_mutect2,
     wrapper:
         "v3.8.0/bio/picard/bedtointervallist"
 
 
-rule picard__replace_read_groups:
+rule mutect2__replace_read_groups:
     input:
         bam=infer_bam_for_sample_and_ref,
     output:
-        temp("results/variants_mutect2/{reference}/{sample}/fixed.bam"),
+        temp("results/variants/{reference}/{sample}/mutect2_fixed.bam"),
     threads: get_threads_for_mutect2()
     resources:
-        mem_mb=1024,
+        mem_mb=get_mem_mb_for_mutect2,
     log:
-        "logs/picard/replace_rg/{reference}/{sample}.log",
+        "logs/variants_mutect2/replace_read_groups/{reference}/{sample}.log",
     params:
-        # Required for GATK
         extra="--RGLB lib1 --RGPL illumina --RGPU {sample} --RGSM {sample}",
     wrapper:
         "v3.8.0/bio/picard/addorreplacereadgroups"
 
 
-rule sambamba__index_bam:
+rule mutect2__sambamba_index_bam:
     input:
-        "results/variants_mutect2/{reference}/{sample}/fixed.bam",
+        "results/variants/{reference}/{sample}/mutect2_fixed.bam",
     output:
-        "results/variants_mutect2/{reference}/{sample}/fixed.bam.bai",
+        "results/variants/{reference}/{sample}/mutect2_fixed.bam.bai",
     threads: get_threads_for_mutect2()
     log:
-        "logs/sambamba/index/{reference}/{sample}.log",
+        "logs/variants_mutect2/sambamba_index_bam/{reference}/{sample}.log",
     params:
         extra="",
     wrapper:
@@ -67,59 +63,59 @@ rule mutect2_call:
         fasta=infer_reference_fasta,
         fasta_dict=infer_reference_dict,
         fasta_fai=infer_reference_faidx,
-        map="results/variants_mutect2/{reference}/{sample}/fixed.bam",
-        map_idx="results/variants_mutect2/{reference}/{sample}/fixed.bam.bai",
-        intervals="results/variants_mutect2/{reference}/regions.interval_list",
+        map="results/variants/{reference}/{sample}/mutect2_fixed.bam",
+        map_idx="results/variants/{reference}/{sample}/mutect2_fixed.bam.bai",
+        intervals="results/variants/{reference}/regions.interval_list",
     output:
-        vcf="results/variants_mutect2/{reference}/{sample}/original.vcf",
-        tbi="results/variants_mutect2/{reference}/{sample}/original.vcf.idx",
-        f1r2="results/variants_mutect2/{reference}/{sample}/counts.f1r2.tar.gz",
+        vcf="results/variants/{reference}/{sample}/mutect2_all.vcf",
+        tbi="results/variants/{reference}/{sample}/mutect2_all.vcf.idx",
+        f1r2="results/variants/{reference}/{sample}/mutect2_counts.f1r2.tar.gz",
     threads: get_threads_for_mutect2()
     resources:
-        mem_mb=1024,
+        mem_mb=get_mem_mb_for_mutect2,
     params:
-        extra="--create-output-variant-index --tumor-sample {sample} ",  # TODO
+        extra=parse_mutect2_call_params(),
     log:
-        "logs/mutect/{reference}/{sample}.log",
+        "logs/variants_mutect2/call/{reference}/{sample}.log",
     wrapper:
         "v3.8.0/bio/gatk/mutect"
 
 
-rule gatk_learn_read_orientation_model:
+rule mutect2__gatk_learn_read_orientation_model:
     input:
-        f1r2="results/variants_mutect2/{reference}/{sample}/counts.f1r2.tar.gz",
+        f1r2="results/variants/{reference}/{sample}/mutect2_counts.f1r2.tar.gz",
     output:
-        temp("results/variants_mutect2/{reference}/{sample}/artifacts_prior.tar.gz"),
+        temp("results/variants/{reference}/{sample}/mutect2_artifacts_prior.tar.gz"),
     threads: get_threads_for_mutect2()
     resources:
-        mem_mb=1024,
+        mem_mb=get_mem_mb_for_mutect2,
     params:
         extra="",
     log:
-        "logs/learnreadorientationbias/{reference}/{sample}.log",
+        "logs/variants_mutect2/gatk_learn_read_orientation_model/{reference}/{sample}.log",
     wrapper:
         "v3.8.0/bio/gatk/learnreadorientationmodel"
 
 
-rule filter_mutect_calls:
+rule mutect2__filter_calls:
     input:
-        vcf="results/variants_mutect2/{reference}/{sample}/original.vcf",
+        vcf="results/variants/{reference}/{sample}/mutect2_all.vcf",
         ref=infer_reference_fasta,
         ref_dict=infer_reference_dict,
         ref_fai=infer_reference_faidx,
-        bam="results/variants_mutect2/{reference}/{sample}/fixed.bam",
-        bam_bai="results/variants_mutect2/{reference}/{sample}/fixed.bam.bai",
-        f1r2="results/variants_mutect2/{reference}/{sample}/artifacts_prior.tar.gz",
+        bam="results/variants/{reference}/{sample}/mutect2_fixed.bam",
+        bam_bai="results/variants/{reference}/{sample}/mutect2_fixed.bam.bai",
+        f1r2="results/variants/{reference}/{sample}/mutect2_artifacts_prior.tar.gz",
     output:
-        vcf="results/variants_mutect2/{reference}/{sample}/filtered.vcf",
-        stats="results/variants_mutect2/{reference}/{sample}/filtered.vcf.filteringStats.tsv",
+        vcf="results/variants/{reference}/{sample}/mutect2_filtered.vcf",
+        stats="results/variants/{reference}/{sample}/mutect2_filtered.vcf.filteringStats.tsv",
     threads: get_threads_for_mutect2()
     resources:
-        mem_mb=1024,
+        mem_mb=get_mem_mb_for_mutect2,
     log:
-        "logs/gatk/filter/{reference}/{sample}.log",
+        "logs/variants_mutect2/filter_calls/{reference}/{sample}.log",
     params:
-        extra="--microbial-mode --create-output-variant-index --min-median-mapping-quality 35 --max-alt-allele-count 3",
+        extra=parse_mutect2_filter_params(),
         java_opts="",
     wrapper:
         "v3.8.0/bio/gatk/filtermutectcalls"

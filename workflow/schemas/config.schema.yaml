@@ -26,6 +26,10 @@ definitions:
         type: object
         default: {}
         "$ref": "#/definitions/VariantsFreebayes"
+      variants__mutect2:
+        type: object
+        default: {}
+        "$ref": "#/definitions/VariantsMutect2"
       consensus__ivar:
         type: object
         default: {}
@@ -66,8 +70,11 @@ definitions:
             threads:
               required:
                 - variants__mutect2
-          # required:
-          # - variants__bcftools
+            resources:
+              required:
+                - variants__mutect2_mem_mb
+          required:
+            - variants__mutect2
       - if:
           properties:
             variants:
@@ -143,6 +150,60 @@ definitions:
             - "ivar"
     required:
       - callers
+  VariantsMutect2:
+    type: object
+    additionalProperties: false
+    properties:
+      base_quality_score_threshold:
+        type: integer
+        default: 18
+        description: "Base qualities below this threshold will be reduced to the minimum (6)"
+      callable_depth:
+        type: integer
+        default: 10
+        description: "Minimum depth to be considered callable for Mutect stats. Does not affect genotyping."
+      f1r2_max_depth:
+        type: integer
+        default: 200
+        description: "Sites with depth higher than this value will be grouped."
+      f1r2_median_mq:
+        type: integer
+        default: 50
+        description: "Skip sites with median mapping quality below this value."
+      f1r2_min_bq:
+        type: integer
+        default: 20
+        description: "Exclude bases below this quality from pileup."
+      min_base_quality_score:
+        type: integer
+        default: 10
+        description: "Minimum base quality score for a base to be considered."
+      max_reads_per_alignment_start:
+        type: integer
+        default: 50
+        description: "Maximum number of reads to retain per alignment start position. Reads above this threshold will be downsampled. Set to 0 to disable."
+      do_postfilter:
+        type: boolean
+        default: False
+        description: "Whether to do postfiltering or not. Default: False"
+      postfilter:
+        type: object
+        "$ref": "#/definitions/VariantsMutect2Postfilter"
+    required:
+      - base_quality_score_threshold
+      - callable_depth
+      - f1r2_max_depth
+      - f1r2_median_mq
+      - f1r2_min_bq
+      - min_base_quality_score
+      - max_reads_per_alignment_start
+    if:
+      properties:
+        do_postfilter:
+          const: true
+    then:
+      required:
+        - postfilter
   VariantsFreebayes:
     type: object
     additionalProperties: false
@@ -245,6 +306,7 @@ definitions:
       - report_all_haplotype_alleles
       - report_monorphic
       - do_postfilter
+    title: VariantsFreebayes
   VariantsBcftools:
     type: object
     additionalProperties: false
@@ -277,7 +339,14 @@ definitions:
         description: "Set to true to recalculate BAQ on the fly, ignore existing BQ tags."
       ploidy:
         type: string
-        description: "predefined ploidy"
+        enum:
+          - "GRCh37"
+          - "GRCh38"
+          - "X"
+          - "Y"
+          - "1"
+          - "2"
+        description: "predefined ploidy. Allowed: 'GRCh37', 'GRCh38', 'X', 'Y', '1', '2'"
       keep_alts:
         type: boolean
         default: false
@@ -286,10 +355,22 @@ definitions:
         type: boolean
         default: true
         description: "output variant sites only."
-      format_fields:
-        type: string
-        default: "GQ,GP"
-        description: "comma-separated list of FORMAT fields to output for each sample. Currently GQ and GP fields are supported. For convenience, the fields can be given as lower case letters. Prefixed with '^' indicates a request for tag removal of auxiliary tags useful only for calling."
+      prior:
+        type: number
+        default: 0.0011
+        minimum: 0
+        maximum: 1
+        description: "Prior probability for the alternate allele."
+      annotate:
+        type: array
+        default: ["FORMAT/GQ", "FORMAT/GP"]
+        items:
+          type: string
+          enum:
+            - "FORMAT/GQ"
+            - "FORMAT/GP"
+            - "INFO/PV4"
+        description: 'Comma-separated list of FORMAT fields to output. Allowed: "FORMAT/GQ", "FORMAT_GP", "INFO/PV4".'
       do_postfilter:
         type: boolean
       postfilter:
@@ -311,7 +392,49 @@ definitions:
       - min_fraction_of_gaps
       - annotation
       - do_postfilter
+      - prior
     title: VariantsCalling
+  VariantsMutect2Postfilter:
+    type: object
+    additionalProperties: false
+    properties:
+      microbial_mode:
+        type: boolean
+        default: false
+        description: "Set filters to microbial defaults."
+      min_median_base_quality:
+        type: integer
+        default: 20
+        description: "Minimum median base quality of alt reads."
+      min_median_mapping_quality:
+        type: integer
+        default: -1
+        description: "Minimum median mapping quality of alt reads."
+      min_median_read_position:
+        type: integer
+        default: 1
+        description: "Minimum median distance of variants from the end of reads."
+      min_reads_per_strand:
+        type: integer
+        default: 0
+        description: "Minimum alt reads required on both forward and reverse strands."
+      min_slippage_length:
+        type: integer
+        default: 8
+        description: "Minimum number of reference bases in an STR to suspect polymerase slippage."
+      pcr_slippage_rate:
+        type: number
+        default: 0.1
+        description: "The frequency of polymerase slippage in contexts where it is suspected."
+    title: VariantsMutect2Postfilter
+    required:
+      - microbial_mode
+      - min_median_base_quality
+      - min_median_mapping_quality
+      - min_median_read_position
+      - min_reads_per_strand
+      - min_slippage_length
+      - pcr_slippage_rate
   VariantsBcftoolsPostfilter:
     type: object
     additionalProperties: false
