@@ -75,6 +75,13 @@ def get_outputs():
                 reference=references,
             )
 
+    if "mutect2" in config["variants"]["callers"]:
+        outputs["variants_mutect2"] = expand(
+            "results/variants_mutect2/{reference}/{sample}/filtered.vcf",
+            sample=sample_names,
+            reference=references,
+        )
+
     if "ivar" in config["consensus"]["callers"]:
         outputs["consensus_ivar"] = expand(
             "results/consensus/ivar/{reference}/{sample}.fa", sample=sample_names, reference=references

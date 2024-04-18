@@ -111,6 +111,7 @@ definitions:
           enum:
             - "bcftools"
             - "ivar"
+            - "mutect2"
             - "freebayes"
     required:
       - callers
