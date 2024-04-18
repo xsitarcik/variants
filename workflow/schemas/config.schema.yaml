@@ -452,13 +452,6 @@ definitions:
           - "-both"
           - null
         description: "OPT - split multiallelic sites into biallelic records (-) or join biallelic sites into multiallelic records (+). An optional type string can follow which controls variant types which should be split or merged together: If only SNP records should be split or merged, specify snps; if both SNPs and indels should be merged separately into two records, specify both; if SNPs and indels should be merged into a single record, specify any."
-      multi_overlaps:
-        type: [string, "null"]
-        enum:
-          - "missing"
-          - "reference"
-          - null
-        description: "OPT - Allowed: 'missing', 'reference'. Use the reference (0) or missing (.) allele for overlapping alleles after splitting multiallelic sites."
       atomize:
         type: boolean
         default: false
@@ -499,7 +492,6 @@ definitions:
         description: "Remove alleles not seen in the genotype fields from the ALT column. Note that if no alternate allele remains after trimming, the record itself is not removed but ALT is set to '.' If the option -s or -S is given, removes alleles not seen in the subset. INFO and FORMAT tags declared as Type=A, G or R will be trimmed as well."
     required:
       - multiallelic
-      - multi_overlaps
       - atomize
       - atom_overlaps
       - snp_gap

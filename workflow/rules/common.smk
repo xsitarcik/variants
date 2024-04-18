@@ -126,13 +126,8 @@ def get_bcftools_norm_params(tool: str):
     if form := config[f"variants__{tool}"]["postfilter"]["multiallelic"]:
         cmd += f" --multiallelics {form}"
 
-        if form := config[f"variants__{tool}"]["postfilter"]["multi_overlaps"]:
-            x = "'.'" if form == "missing" else "0"
-            cmd += f" --multi-overlaps {x}"
-
     if config[f"variants__{tool}"]["postfilter"]["atomize"]:
-        x = "'.'" if form == "missing" else "0"
-        cmd += f" --multi-overlaps {x}"
+        cmd += f" --atomize"
 
         if kind := config[f"variants__{tool}"]["postfilter"]["atom_overlaps"]:
             x = "." if kind == "missing" else "\*"

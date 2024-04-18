@@ -61,7 +61,6 @@ variants__bcftools: # Uses bcftools mpileup and bcftools call.
   do_postfilter: True # Whether to postfilter variants.
   postfilter: # Uses bcftools norm, annotate and filter.
     multiallelic: "+any" # Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
-    multi_overlaps: null # OPT - Allowed: "missing", "reference". Use the reference (0) or missing (.) allele for overlapping alleles after splitting multiallelic sites.
     atomize: False # Whether to split MNVs into consecutive SNVs.
     atom_overlaps: "star" # OPT - Allowed: "missing", "star". Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec.
     snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
@@ -129,7 +128,6 @@ variants__freebayes:
   do_postfilter: True # Whether to postfilter variants.
   postfilter: # Uses bcftools norm, annotate and filter.
     multiallelic: "+any" # OPT - Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
-    multi_overlaps: null # OPT - Allowed: "missing", "reference". Use the reference (0) or missing (.) allele for overlapping alleles after splitting multiallelic sites.
     atomize: False # Whether to split MNVs into consecutive SNVs.
     atom_overlaps: "star" # OPT - Allowed: "missing", "star". Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec.
     snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
