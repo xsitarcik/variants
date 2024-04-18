@@ -10,7 +10,7 @@ rule picard__replace_read_groups:
     resources:
         mem_mb=1024,
     log:
-        "logs/picard/replace_rg/{sample}.log",
+        "logs/picard/replace_rg/{reference}/{sample}.log",
     params:
         # Required for GATK
         extra="--RGLB lib1 --RGPL illumina --RGPU {sample} --RGSM {sample}",
@@ -25,7 +25,7 @@ rule sambamba__index_bam:
         "results/variants_mutect2/{reference}/{sample}/fixed.bam.bai",
     threads: 1
     log:
-        "logs/sambamba/index/{sample}.log",
+        "logs/sambamba/index/{reference}/{sample}.log",
     params:
         extra="",
     wrapper:
@@ -49,7 +49,7 @@ rule mutect2_call:
     params:
         extra="--create-output-variant-index --tumor-sample {sample} ",  # TODO
     log:
-        "logs/mutect/{sample}.log",
+        "logs/mutect/{reference}/{sample}.log",
     wrapper:
         "v3.8.0/bio/gatk/mutect"
 
@@ -68,7 +68,7 @@ rule gatk_get_pileup_summaries:
     params:
         extra="",
     log:
-        "logs/summary/{sample}.log",
+        "logs/summary/{reference}/{sample}.log",
     wrapper:
         "v3.8.0/bio/gatk/getpileupsummaries"
 
@@ -82,7 +82,7 @@ rule gatk_calculate_contamination:
     resources:
         mem_mb=1024,
     log:
-        "logs/contamination/{sample}.log",
+        "logs/contamination/{reference}/{sample}.log",
     params:
         extra="",
     wrapper:
@@ -100,7 +100,7 @@ rule gatk_learn_read_orientation_model:
     params:
         extra="",
     log:
-        "logs/learnreadorientationbias/{sample}.log",
+        "logs/learnreadorientationbias/{reference}/{sample}.log",
     wrapper:
         "v3.8.0/bio/gatk/learnreadorientationmodel"
 
@@ -122,7 +122,7 @@ rule filter_mutect_calls:
     resources:
         mem_mb=1024,
     log:
-        "logs/gatk/filter/{sample}.log",
+        "logs/gatk/filter/{reference}/{sample}.log",
     params:
         extra="--microbial-mode --create-output-variant-index --min-median-mapping-quality 35 --max-alt-allele-count 3",
         java_opts="",

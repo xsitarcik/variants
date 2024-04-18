@@ -12,7 +12,7 @@ mapping:
   _generate_qualimap: [] # OPT - specify which steps to generate qualimap for. Allowed: "mapping", "deduplication" or empty list (default: empty list).
 
 variants:
-  callers: ["bcftools", "ivar", "freebayes"] # Specify method for variant calling: "bcftools", "ivar".
+  callers: ["bcftools", "ivar", "freebayes", "mutect2"] # Specify method for variant calling: "bcftools", "ivar".
 
 consensus:
   callers: ["ivar"]
