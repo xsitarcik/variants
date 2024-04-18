@@ -112,7 +112,7 @@ rule filter_mutect_calls:
         f1r2="results/variants_mutect2/{reference}/{sample}/artifacts_prior.tar.gz",
     output:
         vcf="results/variants_mutect2/{reference}/{sample}/filtered.vcf",
-        stats="results/variants_mutect2/{reference}/{sample}/filtered.stats",
+        stats="results/variants_mutect2/{reference}/{sample}/filtered.vcf.filteringStats.tsv",
     threads: get_threads_for_mutect2()
     resources:
         mem_mb=1024,
