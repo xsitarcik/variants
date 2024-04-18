@@ -85,42 +85,6 @@ rule mutect2_call:
         "v3.8.0/bio/gatk/mutect"
 
 
-rule gatk_get_pileup_summaries:
-    input:
-        bam="results/variants_mutect2/{reference}/{sample}/fixed.bam",
-        bai_bai="results/variants_mutect2/{reference}/{sample}/fixed.bam.bai",
-        variants="results/variants_mutect2/{reference}/{sample}/original.vcf",
-        variants_tbi="results/variants_mutect2/{reference}/{sample}/original.vcf.idx",
-        intervals="results/variants_mutect2/{reference}/regions.interval_list",
-    output:
-        "results/variants_mutect2/{reference}/{sample}/summary.table",
-    threads: get_threads_for_mutect2()
-    resources:
-        mem_mb=1024,
-    params:
-        extra="",
-    log:
-        "logs/summary/{reference}/{sample}.log",
-    wrapper:
-        "v3.8.0/bio/gatk/getpileupsummaries"
-
-
-rule gatk_calculate_contamination:
-    input:
-        tumor="results/variants_mutect2/{reference}/{sample}/summary.table",
-    output:
-        temp("results/variants_mutect2/{reference}/{sample}/summary.pileups.table"),
-    threads: get_threads_for_mutect2()
-    resources:
-        mem_mb=1024,
-    log:
-        "logs/contamination/{reference}/{sample}.log",
-    params:
-        extra="",
-    wrapper:
-        "v3.8.0/bio/gatk/calculatecontamination"
-
-
 rule gatk_learn_read_orientation_model:
     input:
         f1r2="results/variants_mutect2/{reference}/{sample}/counts.f1r2.tar.gz",
@@ -145,11 +109,10 @@ rule filter_mutect_calls:
         ref_fai=infer_reference_faidx,
         bam="results/variants_mutect2/{reference}/{sample}/fixed.bam",
         bam_bai="results/variants_mutect2/{reference}/{sample}/fixed.bam.bai",
-        contamination="results/variants_mutect2/{reference}/{sample}/summary.pileups.table",
         f1r2="results/variants_mutect2/{reference}/{sample}/artifacts_prior.tar.gz",
     output:
         vcf="results/variants_mutect2/{reference}/{sample}/filtered.vcf",
-        vcf_idx="results/variants_mutect2/{reference}/{sample}/filtered.vcf.tbi",
+        stats="results/variants_mutect2/{reference}/{sample}/filtered.stats",
     threads: get_threads_for_mutect2()
     resources:
         mem_mb=1024,
