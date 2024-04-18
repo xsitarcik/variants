@@ -151,6 +151,7 @@ threads:
   mapping__indexing: 2
   variants__bcftools: 2
   variants__freebayes: 4
+  variants__mutect2: 4
 
 module_versions:
   reads: "v3.2.1"

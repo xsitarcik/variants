@@ -292,5 +292,9 @@ def get_threads_for_freebayes():
     return min(config["threads"]["variants__freebayes"], config["max_threads"])
 
 
+def get_threads_for_mutect2():
+    return min(config["threads"]["variants__mutect2"], config["max_threads"])
+
+
 def get_mem_mb_for_freebayes(wildcards, attempt):
     return min(config["max_mem_mb"], config["resources"]["variants__freebayes_mem_mb"] * attempt)

@@ -1,12 +1,42 @@
 # https://snakemake-wrappers.readthedocs.io/en/stable/meta-wrappers/gatk_mutect2_calling.html
 
 
+rule custom__create_wgs_bed_file:
+    input:
+        fai=infer_reference_faidx,
+    output:
+        bed="results/variants_mutect2/{reference}/regions.bed",
+    log:
+        "logs/custom/create_wgs_bed_file/{reference}.log",
+    localrule: True
+    conda:
+        "../../envs/awk_sed.yaml"
+    shell:
+        "(awk '{{print $1, 1, $2, $1}}' {input.fai} | sed 's/ /\t/g' > {output.bed}) 2> {log}"
+
+
+rule picard__bed_to_interval_list:
+    input:
+        bed="results/variants_mutect2/{reference}/regions.bed",
+        dict=infer_reference_dict,
+    output:
+        intervals="results/variants_mutect2/{reference}/regions.interval_list",
+    log:
+        "logs/picard/bed_to_interval_list/{reference}.log",
+    params:
+        extra="--SORT true --UNIQUE true",
+    resources:
+        mem_mb=1024,
+    wrapper:
+        "v3.8.0/bio/picard/bedtointervallist"
+
+
 rule picard__replace_read_groups:
     input:
         bam=infer_bam_for_sample_and_ref,
     output:
         temp("results/variants_mutect2/{reference}/{sample}/fixed.bam"),
-    threads: 1
+    threads: get_threads_for_mutect2()
     resources:
         mem_mb=1024,
     log:
@@ -23,7 +53,7 @@ rule sambamba__index_bam:
         "results/variants_mutect2/{reference}/{sample}/fixed.bam",
     output:
         "results/variants_mutect2/{reference}/{sample}/fixed.bam.bai",
-    threads: 1
+    threads: get_threads_for_mutect2()
     log:
         "logs/sambamba/index/{reference}/{sample}.log",
     params:
@@ -39,11 +69,12 @@ rule mutect2_call:
         fasta_fai=infer_reference_faidx,
         map="results/variants_mutect2/{reference}/{sample}/fixed.bam",
         map_idx="results/variants_mutect2/{reference}/{sample}/fixed.bam.bai",
+        intervals="results/variants_mutect2/{reference}/regions.interval_list",
     output:
         vcf="results/variants_mutect2/{reference}/{sample}/original.vcf",
-        tbi="results/variants_mutect2/{reference}/{sample}/original.vcf.tbi",
+        tbi="results/variants_mutect2/{reference}/{sample}/original.vcf.idx",
         f1r2="results/variants_mutect2/{reference}/{sample}/counts.f1r2.tar.gz",
-    threads: 1
+    threads: get_threads_for_mutect2()
     resources:
         mem_mb=1024,
     params:
@@ -59,10 +90,11 @@ rule gatk_get_pileup_summaries:
         bam="results/variants_mutect2/{reference}/{sample}/fixed.bam",
         bai_bai="results/variants_mutect2/{reference}/{sample}/fixed.bam.bai",
         variants="results/variants_mutect2/{reference}/{sample}/original.vcf",
-        variants_tbi="results/variants_mutect2/{reference}/{sample}/original.vcf.tbi",
+        variants_tbi="results/variants_mutect2/{reference}/{sample}/original.vcf.idx",
+        intervals="results/variants_mutect2/{reference}/regions.interval_list",
     output:
         "results/variants_mutect2/{reference}/{sample}/summary.table",
-    threads: 1
+    threads: get_threads_for_mutect2()
     resources:
         mem_mb=1024,
     params:
@@ -78,7 +110,7 @@ rule gatk_calculate_contamination:
         tumor="results/variants_mutect2/{reference}/{sample}/summary.table",
     output:
         temp("results/variants_mutect2/{reference}/{sample}/summary.pileups.table"),
-    threads: 1
+    threads: get_threads_for_mutect2()
     resources:
         mem_mb=1024,
     log:
@@ -94,7 +126,7 @@ rule gatk_learn_read_orientation_model:
         f1r2="results/variants_mutect2/{reference}/{sample}/counts.f1r2.tar.gz",
     output:
         temp("results/variants_mutect2/{reference}/{sample}/artifacts_prior.tar.gz"),
-    threads: 1
+    threads: get_threads_for_mutect2()
     resources:
         mem_mb=1024,
     params:
@@ -118,7 +150,7 @@ rule filter_mutect_calls:
     output:
         vcf="results/variants_mutect2/{reference}/{sample}/filtered.vcf",
         vcf_idx="results/variants_mutect2/{reference}/{sample}/filtered.vcf.tbi",
-    threads: 1
+    threads: get_threads_for_mutect2()
     resources:
         mem_mb=1024,
     log:
