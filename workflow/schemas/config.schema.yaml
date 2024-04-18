@@ -60,6 +60,21 @@ definitions:
                 callers:
                   contains:
                     type: string
+                    const: "mutect2"
+        then:
+          properties:
+            threads:
+              required:
+                - variants__mutect2
+          # required:
+          # - variants__bcftools
+      - if:
+          properties:
+            variants:
+              properties:
+                callers:
+                  contains:
+                    type: string
                     const: "freebayes"
         then:
           properties:
@@ -494,6 +509,10 @@ definitions:
         type: integer
         default: 1
         description: "Number of threads to use for freebayes variants"
+      variants__mutect2:
+        type: integer
+        default: 1
+        description: "Number of threads to use for mutect2 variants"
     title: Threads
   ModuleVersions:
     type: object
