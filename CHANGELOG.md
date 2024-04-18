@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/xsitarcik/variants/compare/v1.2.0...v1.3.0) (2024-04-18)
+
+
+### Features
+
+* added freebayes as another variant caller ([3958128](https://github.com/xsitarcik/variants/commit/39581282d0904606d0f4f9bb9ef9a6d7cac802ec))
+* freebayes postfilter ([4a058c4](https://github.com/xsitarcik/variants/commit/4a058c490aab3a2655dc46799d7187a3d566b95b))
+
 ## [1.2.0](https://github.com/xsitarcik/variants/compare/v1.1.1...v1.2.0) (2024-04-16)
 
 
