@@ -5,7 +5,7 @@ rule freebayes__call_vcf:
         ref=infer_reference_fasta,
         index=infer_reference_faidx,
     output:
-        vcf=temp("results/variants/{reference}/{sample}/freebayes_all.vcf"),
+        vcf="results/variants/{reference}/{sample}/freebayes_all.vcf",
     log:
         "logs/variants_freebayes/call_vcf/{reference}/{sample}.log",
     params:

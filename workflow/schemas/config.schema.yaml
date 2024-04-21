@@ -11,21 +11,18 @@ definitions:
       consensus:
         type: object
         "$ref": "#/definitions/Consensus"
-      threads:
-        type: object
-        "$ref": "#/definitions/Threads"
       variants__bcftools:
         type: object
         default: {}
         "$ref": "#/definitions/VariantsBcftools"
-      variants__ivar:
-        type: object
-        default: {}
-        "$ref": "#/definitions/VariantsIvar"
       variants__freebayes:
         type: object
         default: {}
         "$ref": "#/definitions/VariantsFreebayes"
+      variants__ivar:
+        type: object
+        default: {}
+        "$ref": "#/definitions/VariantsIvar"
       variants__mutect2:
         type: object
         default: {}
@@ -34,12 +31,15 @@ definitions:
         type: object
         default: {}
         "$ref": "#/definitions/ConsensusIvar"
-      module_versions:
-        type: object
-        "$ref": "#/definitions/ModuleVersions"
       resources:
         type: object
         "$ref": "#/definitions/Resources"
+      threads:
+        type: object
+        "$ref": "#/definitions/Threads"
+      module_versions:
+        type: object
+        "$ref": "#/definitions/ModuleVersions"
     title: VariantsWorkflow
     allOf:
       - if:
@@ -311,6 +311,30 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      count_orphans:
+        type: boolean
+        default: false
+        description: "Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set."
+      compute_base_alignment_quality:
+        type: string
+        enum:
+          - "no"
+          - "redo"
+          - "full"
+        default: "redo"
+        description: "Controls probabilistic realignment for base alignment quality computation. Allowed: 'no', 'redo', 'full'. No' disables it. 'Redo' runs it for problematic regions, 'Full' runs it on all reads."
+      adjust_mapping_quality:
+        type: integer
+        default: 0
+        description: "Adjust quality for high number of mismatches. Recommended to set to 50 when using BWA."
+      max_read_depth:
+        type: integer
+        default: 250
+        description: "At a position, read maximally this number of reads. Should be adjusted to about twice the average read depth as higher read depths usually indicate problematic regions which are often enriched for artefacts."
+      max_depth_indels:
+        type: integer
+        default: 250
+        description: "Skip INDEL calling if the average per-sample depth is above this value."
       min_base_quality:
         type: integer
         default: 13
@@ -319,24 +343,29 @@ definitions:
         type: integer
         default: 0
         description: "Minimum mapping quality for an alignment to be used."
-      adjust_quality_coef:
+      mpileup_annotate:
+        type: array
+        items:
+          type: string
+        default: ["AD", "ADF", "ADR", "DP"]
+      open_prob:
         type: integer
-        default: 0
-        description: "Coefficient for downgrading mapping quality for reads containing excessive mismatches. Given a read with a phred-scaled probability q of being generated from the mapped position, the new mapping quality is about sqrt((INT-q)/INT)*INT. A zero value (the default) disables this functionality."
+        default: 40
+        description: "Phred-scaled gap open sequencing error probability. Increasing it leads to fewer indel calls."
+      gap_ext_prob:
+        type: integer
+        default: 20
+        description: "Phred-scaled gap extension sequencing error probability. Reducing it leads to longer indels."
       min_fraction_of_gaps:
         type: number
         default: 0.002
         minimum: 0
         maximum: 1
         description: "Minimum fraction of gapped reads."
-      annotation:
-        type: string
-        default: "FORMAT/AD,FORMAT/ADF,FORMAT/ADR,FORMAT/DP"
-        description: "Comma-separated list of FORMAT and INFO tags to output."
-      redo_base_alignment_qual:
-        type: boolean
-        default: false
-        description: "Set to true to recalculate BAQ on the fly, ignore existing BQ tags."
+      max_base_quality_cap:
+        type: integer
+        default: 60
+        description: "Caps the base quality to a maximum value. This can be particularly useful on technologies that produce overly optimistic high qualities."
       ploidy:
         type: string
         enum:
@@ -361,16 +390,16 @@ definitions:
         minimum: 0
         maximum: 1
         description: "Prior probability for the alternate allele."
-      annotate:
+      caller_annotate:
         type: array
-        default: ["FORMAT/GQ", "FORMAT/GP"]
+        default: ["GQ", "GP"]
         items:
           type: string
           enum:
-            - "FORMAT/GQ"
-            - "FORMAT/GP"
+            - "GQ"
+            - "GP"
             - "INFO/PV4"
-        description: 'Comma-separated list of FORMAT fields to output. Allowed: "FORMAT/GQ", "FORMAT_GP", "INFO/PV4".'
+        description: 'Comma-separated list of FORMAT fields to output. Allowed: "GQ", "GP", "INFO/PV4".'
       do_postfilter:
         type: boolean
       postfilter:
@@ -385,14 +414,24 @@ definitions:
       required:
         - postfilter
     required:
-      - ploidy
+      - count_orphans
+      - compute_base_alignment_quality
+      - adjust_mapping_quality
+      - max_read_depth
+      - max_depth_indels
       - min_base_quality
       - min_mapping_quality
-      - adjust_quality_coef
+      - mpileup_annotate
+      - open_prob
+      - gap_ext_prob
       - min_fraction_of_gaps
-      - annotation
+      - max_base_quality_cap
+      - ploidy
       - do_postfilter
       - prior
+      - caller_annotate
+      - keep_alts
+      - variants_only
     title: VariantsCalling
   VariantsMutect2Postfilter:
     type: object

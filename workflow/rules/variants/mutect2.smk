@@ -48,7 +48,7 @@ rule mutect2__sambamba_index_bam:
     input:
         "results/variants/{reference}/{sample}/mutect2_fixed.bam",
     output:
-        "results/variants/{reference}/{sample}/mutect2_fixed.bam.bai",
+        temp("results/variants/{reference}/{sample}/mutect2_fixed.bam.bai"),
     threads: get_threads_for_mutect2()
     log:
         "logs/variants_mutect2/sambamba_index_bam/{reference}/{sample}.log",
@@ -69,7 +69,7 @@ rule mutect2_call:
     output:
         vcf="results/variants/{reference}/{sample}/mutect2_all.vcf",
         tbi="results/variants/{reference}/{sample}/mutect2_all.vcf.idx",
-        f1r2="results/variants/{reference}/{sample}/mutect2_counts.f1r2.tar.gz",
+        f1r2=temp("results/variants/{reference}/{sample}/mutect2_counts.f1r2.tar.gz"),
     threads: get_threads_for_mutect2()
     resources:
         mem_mb=get_mem_mb_for_mutect2,

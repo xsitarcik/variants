@@ -38,11 +38,12 @@ rule bcftools__gatk_prepare_vcf:
         ref_dct=infer_reference_dict,
     output:
         vcf=temp("results/variants/{reference}/{sample}/bcftools_all.vcf"),
+        idx=temp("results/variants/{reference}/{sample}/bcftools_all.vcf.idx"),
     log:
         "logs/variants_bcftools/gatk_prepare_vcf/{reference}/{sample}.log",
     params:
-        extra="",  #"--select-type-to-include SNP",  # optional filter arguments, see GATK docs
-        java_opts="",  # optional
+        extra="",
+        java_opts="",
     wrapper:
         "v3.7.0/bio/gatk/selectvariants"
 

@@ -19,6 +19,8 @@ consensus:
 
 # Name: {production value} # Parameter type [tool default]: Description
 
+# Parameter is optional if it has null
+
 ### HYPERPARAMETERS #############################
 reads__subsampling__seqtk:
   seed: 1
@@ -71,33 +73,41 @@ reads__decontamination__kraken:
   krona_dir: "/data/genome/taxonomy/krona/2023-12-03/" # Directory where krona dataset is located or will be downloaded.
 
 variants__bcftools: # Relevant only if bcftools is requested in variants->callers element.
-  min_base_quality: 0 # Minimum base quality for a base to be considered.
-  min_mapping_quality: 13 # Minimum mapping quality for an alignment to be used.
-  adjust_quality_coef: 50 # Adjust quality for high number of mismatches. See bcftools manual. Set to 0 to disable.
-  min_fraction_of_gaps: 0.05 # Minimum fraction of gapped reads.
-  annotation: "FORMAT/AD,FORMAT/ADF,FORMAT/ADR,FORMAT/DP" # Comma-separated list of FORMAT and INFO tags to output.
-  redo_base_alignment_qual: True # Recalculate BAQ on the fly, ignore existing BQ tags.
-
+  # mpileup params:
+  count_orphans: false # Bool (false): Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
+  compute_base_alignment_quality: "redo" # Enum ("redo"): Controls probabilistic realignment for base alignment quality computation. Allowed: "no", "redo", "full". No" disables it. "Redo" runs it for problematic regions, "Full" runs it on all reads.
+  adjust_mapping_quality: 50 # Int (0): Adjust quality for high number of mismatches. Recommended to set to 50 when using BWA.
+  max_read_depth: 600000 # Int (250): At a position, read maximally this number of reads. Should be adjusted to about twice the average read depth as higher read depths usually indicate problematic regions which are often enriched for artefacts.
+  max_depth_indels: 250 # Int (250): Skip INDEL calling if the average per-sample depth is above this value.
+  min_mapping_quality: 13 # Int (0): Minimum mapping quality for an alignment to be used.
+  min_base_quality: 0 # Int (13): Minimum base quality for a base to be considered.
+  max_base_quality_cap: 60 # Int (60): Caps the base quality to a maximum value. This can be particularly useful on technologies that produce overly optimistic high qualities.
+  mpileup_annotate: ["AD", "ADF", "ADR", "DP"] # array of enums ([]): List of tags to add with mpileup. Allowed: see the end of file.
+  gap_ext_prob: 20 # Int(20): Phred-scaled gap extension sequencing error probability. Reducing it leads to longer indels.
+  open_prob: 40 # Int(40): Phred-scaled gap open sequencing error probability. Reducing INT leads to more indel calls.
+  min_fraction_of_gaps: 0.05 # float(0.002): Minimum fraction of gapped reads
+  # Caller params
   ploidy: "2" # Enum ["2"]: Predefined ploidy. Allowed: 'GRCh37', 'GRCh38', 'X', 'Y', '1', '2'".
   prior: 0.0011 # Float [0.0011]: Expected substitution rate per site. Stricter calls are obtained by using smaller value, more benevolent calls are obtained by using bigger value.
   keep_alts: True # Bool [False]: Output all alternate alleles present in the alignments even if they do not appear in any of the genotypes.
   variants_only: True # Bool [False]: Output variant sites only.
-  annotate: ["FORMAT/GQ", "FORMAT/GP"] # *Array of enums ([]): Comma-separated list of FORMAT fields to output. Allowed: "FORMAT/GQ", "FORMAT_GP", "INFO/PV4".
+  caller_annotate: ["GQ", "GP"] # Array of enums ([]): Comma-separated list of FORMAT fields to output. Allowed: "GQ", "GP", "INFO/PV4".
 
   do_postfilter: True # Whether to postfilter variants.
   postfilter: # Relevant only if do_postfilter is True. Uses bcftools norm, annotate and filter.
-    multiallelic: "+any" # OPT - Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
-    atomize: False # Whether to split MNVs into consecutive SNVs.
-    atom_overlaps: "star" # OPT - Allowed: "missing", "star". Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec.
-    snp_gap: 3 # OPT - Filter SNPs within INT base pairs of an indel or other other variant type.
-    indel_gap: 10 # OPT - Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
-    set_gts_for_failed: "missing" # OPT - Allowed: "missing", "reference". Set genotypes of failed samples to missing value (.) or reference allele (0).
-    include: 'INFO/DP>=10 & GT="alt" & (DP4[2]+DP4[3])/INFO/DP>=0.50' # OPT - Filter which sites to include.
-    exclude: null # OPT - Filter which sites to exclude.
-    trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
+    atomize: False # Bool (false): Whether to split MNVs into consecutive SNVs.
+    atom_overlaps: "star" # Enum ("star"): Allowed: "missing", "star". Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec.
+    multiallelic: "+any" # null/enum: Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
+    additional_tags: ["AF", "AC", "AN", "VAF1"] # See the bottom: bcftools fill-tags
+    snp_gap: 3 # null/int: Filter SNPs within INT base pairs of an indel or other other variant type.
+    indel_gap: 10 # null/int: Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
+    set_gts_for_failed: "missing" # null/enum: Allowed: "missing", "reference". Set genotypes of failed samples to missing value (.) or reference allele (0).
+    include: 'INFO/DP>=10 & GT="alt" & VAF1>=0.50' # null/str: Filter which sites to include.
+    exclude: null # null/str: Filter which sites to exclude.
+    trim_alt_alleles: True # bool(false): Remove alleles not seen in the genotype fields from the ALT column.
 
 variants__freebayes: # Relevant only if freebayes is requested in variants->callers element.
-  min_mapping_quality: 30 # Exclude alignments from analysis if they have a mapping quality less than Q. Default: 30.
+  min_mapping_quality: 20 # Exclude alignments from analysis if they have a mapping quality less than Q. Default: 30.
   min_base_quality: 20 # Exclude alleles from analysis if their supporting base quality is less than Q. Default: 20.
   mismatch_base_quality_threshold: 10 # Count mismatches with base quality higher than this. Default: 10.
   read_mismatch_limit: null # OPT - Exclude reads with more than N mismatches where each mismatch has base quality >= mismatch-base-quality-threshold. Default: null.
@@ -105,8 +115,8 @@ variants__freebayes: # Relevant only if freebayes is requested in variants->call
   read_indel_limit: null # OPT - Exclude reads with more than N separate gaps. Default: null.
   read_snp_limit: null # OPT - Exclude reads with more than N base mismatches, ignoring gaps, and quality higher than `mismatch_base_quality_threshold`. Default: null.
   indel_exclusion_window: 0 # Ignore portions of alignments this many bases from a putative insertion or deletion allele. Default: 0.
-  min_alternate_fraction: 0.05 # Require at least this fraction of observations supporting an alternate allele within a single individual in the in order to evaluate the position. Default: 0.05.
-  min_alternate_count: 2 # Require at least this count of observations supporting an alternate allele within a single individual in order to evaluate the position. Default: 2.
+  min_alternate_fraction: 0.5 # Require at least this fraction of observations supporting an alternate allele within a single individual in the in order to evaluate the position. Default: 0.05.
+  min_alternate_count: 5 # Require at least this count of observations supporting an alternate allele within a single individual in order to evaluate the position. Default: 2.
   min_coverage: 10 # Require at least this coverage to process a site. Default: 0.
   limit_coverage: null # OPT - Integer. Downsample per-sample coverage to this level if greater than this coverage. Default: null.
   skip_coverage: null # OPT - Integer. Skip processing of alignments overlapping positions with coverage >N. This filters sites above this coverage, but will also reduce data nearby. Default: null.
@@ -118,7 +128,7 @@ variants__freebayes: # Relevant only if freebayes is requested in variants->call
   do_postfilter: True # Whether to postfilter variants.
   postfilter: # Relevant only if do_postfilter is True. Uses bcftools norm, annotate and filter.
     multiallelic: "+any" # OPT - Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
-    atomize: False # Whether to split MNVs into consecutive SNVs.
+    atomize: True # Whether to split MNVs into consecutive SNVs.
     atom_overlaps: "star" # OPT - Allowed: "missing", "star". Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec.
     snp_gap: 3 # OPT - Filter SNPs within INT base pairs of an indel or other other variant type.
     indel_gap: 10 # OPT - Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
@@ -136,14 +146,14 @@ variants__ivar: # Relevant only if ivar is requested in variants->callers elemen
   min_frequency_threshold: 0.03 # Minimum frequency threshold (0 - 1) to call variants.
   min_read_depth: 10 # Minimum read depth to call variants.
 
-  do_postfilter: True # Whether to postfilter variants.
-  postfilter:
-    min_alt_depth: 2 # Mixed positions must have at least this ALT_DP value.
-    min_alt_freq: 0.1 # Mixed positions must have at least this ALT_FREQ value.
-    max_alt_freq: 0.9 # Mixed positions cannot have ALT_FREQ value equal or larger than this.
-    min_total_depth: 10 # Mixed positions must have at least this TOTAL_DP value.
+  do_postfilter: True # Bool (True): Whether to postfilter variants or not.
+  postfilter: # Custom filtering of ivar variants. Relevant only if do_postfilter is True.
+    min_alt_depth: 2 # Int (-): Keep row with at least this ALT_DP value.
+    min_alt_freq: 0.1 # Float (-): Keep row with at least this ALT_FREQ value.
+    max_alt_freq: 0.9 # Float (-): Keep row with at most this ALT_FREQ value.
+    min_total_depth: 10 # Int (-): Keep row with at least this TOTAL_DP value.
 
-variants__mutect2:
+variants__mutect2: # Relevant only if mutect2 is requested in variants->callers element.
   base_quality_score_threshold: 18 # Int (18): Base qualities below this threshold will be reduced to the minimum (6)
   callable_depth: 10 # Int (10): Minimum depth to be considered callable for Mutect stats. Does not affect genotyping.
   f1r2_max_depth: 200 # Int (200): Sites with depth higher than this value will be grouped.
@@ -152,9 +162,9 @@ variants__mutect2:
   min_base_quality_score: 10 # Int (10): Minimum base quality score for a base to be considered.
   max_reads_per_alignment_start: 50 # Int (50): Maximum number of reads to retain per alignment start position. Reads above this threshold will be downsampled. Set to 0 to disable.
 
-  do_postfilter: True # Whether to postfilter variants.
+  do_postfilter: True # Bool (True): Whether to postfilter variants or not.
   postfilter:
-    microbial_mode: True # Bool (False): Set filters to microbial defaults.
+    microbial_mode: True # Bool (False): Set filters to microbial defaults or keep defaults for human variant calling.
     min_median_base_quality: 20 # Int (20): Minimum median base quality of alt reads.
     min_median_mapping_quality: -1 # Int (-1): Minimum median mapping quality of alt reads.
     min_median_read_position: 1 # Int (1): Minimum median distance of variants from the end of reads.
@@ -162,7 +172,7 @@ variants__mutect2:
     min_slippage_length: 8 # Int (8): Minimum number of reference bases in an STR to suspect polymerase slippage.
     pcr_slippage_rate: 0.1 # Float (0.1): The frequency of polymerase slippage in contexts where it is suspected.
 
-consensus__ivar: # Relevant only if ivar is requested in consensus->callers element.
+consensus__ivar: # *Relevant only if ivar is requested in consensus->callers element.
   count_orphans: false # Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
   max_read_depth: 1000 # limits the number of reads to load in memory per input file.
   min_base_quality: 13 # minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality.
@@ -200,3 +210,56 @@ threads:
 module_versions:
   reads: "v3.2.1"
   mapping: "v2.1.0"
+# bcftools mpileup tags:
+# Annotations added by default are in this list prefixed with "*". To suppress their output, run with
+# e.g. "-a -FORMAT/AD".
+
+# FORMAT annotation tags available ("FORMAT/" prefix is optional):
+
+#   FORMAT/AD   .. Allelic depth (Number=R,Type=Integer)
+#   FORMAT/ADF  .. Allelic depths on the forward strand (Number=R,Type=Integer)
+#   FORMAT/ADR  .. Allelic depths on the reverse strand (Number=R,Type=Integer)
+#   FORMAT/DP   .. Number of high-quality bases (Number=1,Type=Integer)
+#   FORMAT/NMBZ .. Mann-Whitney U-z test of Number of Mismatches within supporting reads (Number=1,Type=Float)
+#   FORMAT/QS   .. Allele phred-score quality sum for use with `call -mG` and +trio-dnm (Number=R,Type=Integer)
+#   FORMAT/SP   .. Phred-scaled strand bias P-value (Number=1,Type=Integer)
+#   FORMAT/SCR  .. Number of soft-clipped reads (Number=1,Type=Integer)
+
+# INFO annotation tags available:
+
+#   INFO/AD    .. Total allelic depth (Number=R,Type=Integer)
+#   INFO/ADF   .. Total allelic depths on the forward strand (Number=R,Type=Integer)
+#   INFO/ADR   .. Total allelic depths on the reverse strand (Number=R,Type=Integer)
+# * INFO/BQBZ  .. Mann-Whitney U test of Base Quality Bias (Number=1,Type=Float)
+#   INFO/FS    .. Fisher's exact test P-value to detect strand bias (Number=1,Type=Float)
+# * INFO/IDV   .. Maximum number of raw reads supporting an indel (Number=1,Type=Integer)
+# * INFO/IMF   .. Maximum fraction of raw reads supporting an indel (Number=1,Type=Float)
+#   INFO/MIN_PL_SUM
+#              .. Sum of min PL across all samples before normalization, experimental (Number=1,Type=Integer)
+# * INFO/MQ0F  .. Fraction of reads with zero mapping quality (Number=1,Type=Float)
+# * INFO/MQBZ  .. Mann-Whitney U test of Mapping Quality Bias (Number=1,Type=Float)
+# * INFO/MQSBZ .. Mann-Whitney U-z test of Mapping Quality vs Strand Bias (Number=1,Type=Float)
+#   INFO/NM    .. Approximate average number of mismatches in ref and alt reads, experimental (Number=2,Type=Float)
+#   INFO/NMBZ  .. Mann-Whitney U-z test of Number of Mismatches within supporting reads (Number=1,Type=Float)
+# * INFO/RPBZ  .. Mann-Whitney U test of Read Position Bias (Number=1,Type=Float)
+# * INFO/SCBZ  .. Mann-Whitney U-z test of Soft-Clip Length Bias (Number=1,Type=Float)
+#   INFO/SCR   .. Number of soft-clipped reads (Number=1,Type=Integer)
+# * INFO/SGB   .. Segregation based metric, http://samtools.github.io/bcftools/rd-SegBias.pdf (Number=1,Type=Float)
+# * INFO/VDB   .. Variant Distance Bias for filtering splice-site artefacts in RNA-seq data (Number=1,Type=Float)
+
+# bcftools fill-tags tags::
+# INFO/AC        Number:A  Type:Integer  ..  Allele count in genotypes
+# INFO/AC_Hom    Number:A  Type:Integer  ..  Allele counts in homozygous genotypes
+# INFO/AC_Het    Number:A  Type:Integer  ..  Allele counts in heterozygous genotypes
+# INFO/AC_Hemi   Number:A  Type:Integer  ..  Allele counts in hemizygous genotypes
+# INFO/AF        Number:A  Type:Float    ..  Allele frequency from FMT/GT or AC,AN if FMT/GT is not present
+# INFO/AN        Number:1  Type:Integer  ..  Total number of alleles in called genotypes
+# INFO/ExcHet    Number:A  Type:Float    ..  Test excess heterozygosity; 1=good, 0=bad
+# INFO/END       Number:1  Type:Integer  ..  End position of the variant
+# INFO/F_MISSING Number:1  Type:Float    ..  Fraction of missing genotypes (all samples, experimental)
+# INFO/HWE       Number:A  Type:Float    ..  HWE test (PMID:15789306); 1=good, 0=bad
+# INFO/MAF       Number:1  Type:Float    ..  Frequency of the second most common allele
+# INFO/NS        Number:1  Type:Integer  ..  Number of samples with data
+# INFO/TYPE      Number:.  Type:String   ..  The record type (REF,SNP,MNP,INDEL,etc)
+# FORMAT/VAF     Number:A  Type:Float    ..  The fraction of reads with the alternate allele, requires FORMAT/AD or ADF+ADR
+# FORMAT/VAF1    Number:1  Type:Float    ..  The same as FORMAT/VAF but for all alternate alleles cumulatively

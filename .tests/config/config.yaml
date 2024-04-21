@@ -46,17 +46,25 @@ reads__trimming__cutadapt:
   max_expected_errors: null # OPT - Discard read if R1 or R2 has more expected errors than this.
 
 variants__bcftools: # Uses bcftools mpileup and bcftools call.
-  min_base_quality: 0 # Minimum base quality for a base to be considered.
-  min_mapping_quality: 13 # Minimum mapping quality for an alignment to be used.
-  adjust_quality_coef: 50 # Adjust quality for high number of mismatches. See bcftools manual. Set to 0 to disable.
-  min_fraction_of_gaps: 0.05 # Minimum fraction of gapped reads.
-  annotation: "FORMAT/AD,FORMAT/ADF,FORMAT/ADR,FORMAT/DP" # Comma-separated list of FORMAT and INFO tags to output.
-  redo_base_alignment_qual: True # Recalculate BAQ on the fly, ignore existing BQ tags.
+  # mpileup params:
+  count_orphans: false # Bool (false): Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
+  compute_base_alignment_quality: "redo" # Enum ("redo"): Controls probabilistic realignment for base alignment quality computation. Allowed: "no", "redo", "full". No" disables it. "Redo" runs it for problematic regions, "Full" runs it on all reads.
+  adjust_mapping_quality: 50 # Int (0): Adjust quality for high number of mismatches. Recommended to set to 50 when using BWA.
+  max_read_depth: 600000 # Int (250): At a position, read maximally this number of reads. Should be adjusted to about twice the average read depth as higher read depths usually indicate problematic regions which are often enriched for artefacts.
+  max_depth_indels: 250 # Int (250): Skip INDEL calling if the average per-sample depth is above this value.
+  min_mapping_quality: 13 # Int (0): Minimum mapping quality for an alignment to be used.
+  min_base_quality: 0 # Int (13): Minimum base quality for a base to be considered.
+  max_base_quality_cap: 60 # Int (60): Caps the base quality to a maximum value. This can be particularly useful on technologies that produce overly optimistic high qualities.
+  mpileup_annotate: ["AD", "ADF", "ADR", "DP"] # array of enums ([]): List of tags to add with mpileup. Allowed: see the end of file.
+  gap_ext_prob: 20 # Int(20): Phred-scaled gap extension sequencing error probability. Reducing it leads to longer indels.
+  open_prob: 40 # Int(40): Phred-scaled gap open sequencing error probability. Reducing INT leads to more indel calls.
+  min_fraction_of_gaps: 0.05 # float(0.002): Minimum fraction of gapped reads
+  # Caller params
   ploidy: "2" # Enum ["2"]: Predefined ploidy. Allowed: 'GRCh37', 'GRCh38', 'X', 'Y', '1', '2'".
   prior: 0.0011 # Float [0.0011]: Expected substitution rate per site. Stricter calls are obtained by using smaller value, more benevolent calls are obtained by using bigger value.
   keep_alts: True # Bool [False]: Output all alternate alleles present in the alignments even if they do not appear in any of the genotypes.
   variants_only: True # Bool [False]: Output variant sites only.
-  annotate: ["FORMAT/GQ", "FORMAT/GP"] # *Array of enums ([]): Comma-separated list of FORMAT fields to output. Allowed: "FORMAT/GQ", "FORMAT_GP", "INFO/PV4".
+  caller_annotate: ["GQ", "GP"] # Array of enums ([]): Comma-separated list of FORMAT fields to output. Allowed: "GQ", "GP", "INFO/PV4".
 
   do_postfilter: True # Whether to postfilter variants.
   postfilter: # Uses bcftools norm, annotate and filter.

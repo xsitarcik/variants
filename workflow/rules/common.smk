@@ -94,13 +94,28 @@ def get_bcftools_mpileup_params():  # TODO CHECK PARAMS
     extra = [
         "--min-MQ {val}".format(val=config["variants__bcftools"]["min_mapping_quality"]),
         "--min-BQ {val}".format(val=config["variants__bcftools"]["min_base_quality"]),
-        "--adjust-MQ {val}".format(val=config["variants__bcftools"]["adjust_quality_coef"]),
+        "--adjust-MQ {val}".format(val=config["variants__bcftools"]["adjust_mapping_quality"]),
         "--gap-frac {val}".format(val=config["variants__bcftools"]["min_fraction_of_gaps"]),
+        "--max-depth {val}".format(val=config["variants__bcftools"]["max_read_depth"]),
+        "--max-idepth {val}".format(val=config["variants__bcftools"]["max_depth_indels"]),
+        "--max-BQ {val}".format(val=config["variants__bcftools"]["max_base_quality_cap"]),
+        "--ext-prob {val}".format(val=config["variants__bcftools"]["gap_ext_prob"]),
+        "--open-prob {val}".format(val=config["variants__bcftools"]["open_prob"]),
     ]
-    if config["variants__bcftools"]["redo_base_alignment_qual"]:
-        extra.append("--redo-BAQ")
-    if form := config["variants__bcftools"]["annotation"]:
-        extra.append(f"--annotate {form}")
+    if config["variants__bcftools"]["count_orphans"]:
+        extra.append("--count-orphans")
+    match config["variants__bcftools"]["compute_base_alignment_quality"]:
+        case "no":
+            extra.append("--no-BAQ")
+        case "redo":
+            extra.append("--redo-BAQ")
+        case "full":
+            extra.append("--full-BAQ")
+        case _:
+            raise ValueError("Unexpected value for variants__bcftools->compute_base_alignment_quality.")
+
+    if fields := config["variants__bcftools"]["mpileup_annotate"]:
+        extra.append(f"--annotate {','.join(fields)}")
     return " ".join(extra)
 
 
@@ -112,7 +127,7 @@ def get_bcftools_calling_params():
         extra.append("--variants-only")
     extra.append(f'--ploidy {config["variants__bcftools"]["ploidy"]}')
     extra.append(f'--prior {config["variants__bcftools"]["prior"]}')
-    if fields := config["variants__bcftools"]["annotate"]:
+    if fields := config["variants__bcftools"]["caller_annotate"]:
         extra.append(f"--annotate {','.join(fields)}")
     return " ".join(extra)
 
