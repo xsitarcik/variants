@@ -6,7 +6,7 @@ rule ivar__get_variants:
     output:
         tsv=temp("results/variants/{reference}/{sample}/ivar_all.tsv"),
     params:
-        samtools_params=parse_samtools_params_for_variants(),
+        samtools_params=parse_samtools_mpileup_for_ivar("variants"),
         ivar_params=parse_ivar_params_for_variants(),
     log:
         "logs/variants_ivar/get_variants/{reference}/{sample}.log",

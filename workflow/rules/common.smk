@@ -90,7 +90,7 @@ def infer_reference_faidx(wildcards):
 ### Parameter parsing from config #####################################################################################
 
 
-def get_bcftools_mpileup_params():  # TODO CHECK PARAMS
+def get_bcftools_mpileup_params():
     extra = [
         "--min-MQ {val}".format(val=config["variants__bcftools"]["min_mapping_quality"]),
         "--min-BQ {val}".format(val=config["variants__bcftools"]["min_base_quality"]),
@@ -133,21 +133,36 @@ def get_bcftools_calling_params():
 
 
 def get_bcftools_norm_params(tool: str):
-    # common function to parse tool normalization params
     if not config[f"variants__{tool}"]["do_postfilter"]:
         return ""
 
-    cmd = "--check-ref w"
+    cmd = []
     if form := config[f"variants__{tool}"]["postfilter"]["multiallelic"]:
-        cmd += f" --multiallelics {form}"
+        cmd.append(f" --multiallelics {form}")
 
     if config[f"variants__{tool}"]["postfilter"]["atomize"]:
-        cmd += f" --atomize"
+        cmd.append(" --atomize")
 
         if kind := config[f"variants__{tool}"]["postfilter"]["atom_overlaps"]:
             x = "." if kind == "missing" else "\*"
-            cmd += f" --atom-overlaps {x}"
-    return cmd
+            cmd.append(f" --atom-overlaps {x}")
+    if not cmd:
+        raise ValueError("No normalization options selected for {tool}.")
+    cmd.append("--check-ref w")
+    return " ".join(cmd)
+
+
+def parse_tags_for_bcftools_fill_tags(tool: str):
+    if not config[f"variants__{tool}"]["do_postfilter"]:
+        return ""
+    tags = config[f"variants__{tool}"]["postfilter"]["additional_tags"]
+    if tags:
+        return f"--tags {tags}"
+    else:
+        logger.warning(
+            "WARNING: No additional tags were specified for {tool}, but this is illogicaly translated by bcftools to all possible tags."
+        )
+        return ""
 
 
 def get_bcftools_filter_params(tool: str):
@@ -176,45 +191,44 @@ def get_bcftools_view_filter_params(tool: str):
     return "--trim-alt-alleles" if config[f"variants__{tool}"]["postfilter"]["trim_alt_alleles"] else ""
 
 
-def parse_samtools_params_for_variants():
-    samtools_params = ["-aa --no-BAQ"]
-    if config["variants__ivar"]["count_orphans"]:
-        samtools_params.append("--count-orphans")
+def parse_samtools_mpileup_for_ivar(kind: str):
+    samtools_params = [
+        "--max-depth {value}".format(value=config[f"{kind}__ivar"]["max_read_depth"]),
+        "--min-MQ {value}".format(value=config[f"{kind}__ivar"]["min_mapping_quality"]),
+        "--min-BQ {value}".format(value=config[f"{kind}__ivar"]["min_base_quality"]),
+    ]
 
-    samtools_params.append("--max-depth {value}".format(value=config["variants__ivar"]["max_read_depth"]))
-    samtools_params.append("--min-MQ {value}".format(value=config["variants__ivar"]["min_mapping_quality"]))
-    samtools_params.append("--min-BQ {value}".format(value=config["variants__ivar"]["min_base_quality"]))
+    if config[f"{kind}__ivar"]["count_orphans"]:
+        samtools_params.append("--count-orphans")
+    if config[f"{kind}__ivar"]["absolutely_all_positions"]:
+        samtools_params.append("-aa")
+    if config[f"{kind}__ivar"]["redo_base_alignment_quality"]:
+        samtools_params.append("--redo-BAQ")
+    else:
+        samtools_params.append("--no-BAQ")
+
     return " ".join(samtools_params)
 
 
 def parse_ivar_params_for_variants():
-    ivar_params = []
-
-    ivar_params.append("-q {value}".format(value=config["variants__ivar"]["min_base_quality_threshold"]))
-    ivar_params.append("-t {value}".format(value=config["variants__ivar"]["min_frequency_threshold"]))
-    ivar_params.append("-m {value}".format(value=config["variants__ivar"]["min_read_depth"]))
-    return " ".join(ivar_params)
-
-
-def parse_samtools_params_for_consensus():
-    samtools_params = ["--no-BAQ"]
-    if config["consensus__ivar"]["count_orphans"]:
-        samtools_params.append("--count-orphans")
-
-    samtools_params.append("--max-depth {value}".format(value=config["consensus__ivar"]["max_read_depth"]))
-    samtools_params.append("--min-MQ {value}".format(value=config["consensus__ivar"]["min_mapping_quality"]))
-    samtools_params.append("--min-BQ {value}".format(value=config["consensus__ivar"]["min_base_quality"]))
-    return " ".join(samtools_params)
+    return " ".join(
+        [
+            "-q {value}".format(value=config["variants__ivar"]["min_base_quality_threshold"]),
+            "-t {value}".format(value=config["variants__ivar"]["min_frequency_threshold"]),
+            "-m {value}".format(value=config["variants__ivar"]["min_read_depth"]),
+        ]
+    )
 
 
 def parse_ivar_params_for_consensus():
-    ivar_params = []
-
-    ivar_params.append("-q {value}".format(value=config["consensus__ivar"]["consensus_base_quality_threshold"]))
-    ivar_params.append("-t {value}".format(value=config["consensus__ivar"]["consensus_frequency_threshold"]))
-    ivar_params.append("-m {value}".format(value=config["consensus__ivar"]["min_consensus_depth"]))
-
-    return " ".join(ivar_params)
+    return " ".join(
+        [
+            "-q {value}".format(value=config["consensus__ivar"]["consensus_base_quality_threshold"]),
+            "-t {value}".format(value=config["consensus__ivar"]["consensus_frequency_threshold"]),
+            "-m {value}".format(value=config["consensus__ivar"]["min_consensus_depth"]),
+            "-c {value}".format(value=config["consensus__ivar"]["insertion_frequency_threshold"]),
+        ]
+    )
 
 
 def parse_freebayes_params():
@@ -305,6 +319,32 @@ def parse_mutect2_filter_params():
     if cfg["microbial_mode"]:
         extra.append("--microbial-mode")
     return " ".join(extra)
+
+
+def get_all_relevant_extra_params():
+    extra = ""
+
+    if "freebayes" in config["variants"]["callers"]:
+        extra += f"Freebayes: {parse_freebayes_params()}\n"
+    if "mutect2" in config["variants"]["callers"]:
+        extra += f"Mutect2 call: {parse_mutect2_call_params()}\n"
+        extra += f"Mutect2 filter: {parse_mutect2_filter_params()}\n"
+    if "ivar" in config["variants"]["callers"]:
+        extra += f"IVAR variants:\n"
+        extra += f"\tsamtools mpileup: {parse_samtools_mpileup_for_ivar('variants')}\n"
+        extra += f"\tIVAR variants: {parse_ivar_params_for_variants()}\n"
+    if "bcftools" in config["variants"]["callers"]:
+        extra += f"BCFtools variants:\n"
+        extra += f"\tmpileup: {get_bcftools_mpileup_params()}\n"
+        extra += f"\tcall: {get_bcftools_calling_params()}\n"
+        extra += f"\tnorm: {get_bcftools_norm_params('bcftools')}\n"
+        extra += f"\tfilter: {get_bcftools_filter_params('bcftools')}\n"
+        extra += f"\tview filter: {get_bcftools_view_filter_params('bcftools')}\n"
+    if "ivar" in config["consensus"]["callers"]:
+        extra += "IVAR consensus:\n"
+        extra += f"\tsamtools mpileup: {parse_samtools_mpileup_for_ivar('consensus')}\n"
+        extra += f"\tIVAR consensus: {parse_ivar_params_for_consensus()}\n"
+    return extra
 
 
 ### Resource handling #################################################################################################

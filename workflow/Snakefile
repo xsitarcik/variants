@@ -2,6 +2,9 @@ from snakemake.utils import min_version
 
 min_version("7.25.0")
 
+if os.path.exists(".parameters_parsed.txt"):
+    os.remove(".parameters_parsed.txt")
+
 
 include: "rules/common.smk"
 
@@ -32,3 +35,7 @@ rule all:
         **get_outputs(),
     default_target: True
     localrule: True
+
+
+with open(".parameters_parsed.txt", "a") as f:
+    f.write(get_all_relevant_extra_params())

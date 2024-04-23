@@ -85,10 +85,12 @@ rule bcftools__fill_tags:
         temp("results/variants/{reference}/{sample}/bcftools_filltags.vcf"),
     log:
         "logs/variants_bcftools/fill_tags/{reference}/{sample}.log",
+    params:
+        tags=parse_tags_for_bcftools_fill_tags("bcftools"),
     conda:
         "../../envs/bcftools.yaml"
     shell:
-        "bcftools plugin fill-tags {input} -O v -o {output} -- --tags 'AF,AC,AN' 1> {log} 2>&1"
+        "bcftools plugin fill-tags {input} -O v -o {output} -- {params.tags:q} 1> {log} 2>&1"
 
 
 rule bcftools__filter_vcf:

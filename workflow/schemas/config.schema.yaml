@@ -13,24 +13,24 @@ definitions:
         "$ref": "#/definitions/Consensus"
       variants__bcftools:
         type: object
-        default: {}
         "$ref": "#/definitions/VariantsBcftools"
+        description: "Relevant only if bcftools is specified in variants->callers"
       variants__freebayes:
         type: object
-        default: {}
         "$ref": "#/definitions/VariantsFreebayes"
+        description: "Relevant only if freebayes is specified in variants->callers"
       variants__ivar:
         type: object
-        default: {}
         "$ref": "#/definitions/VariantsIvar"
+        description: "Relevant only if ivar is specified in variants->callers"
       variants__mutect2:
         type: object
-        default: {}
         "$ref": "#/definitions/VariantsMutect2"
+        description: "Relevant only if mutect2 is specified in variants->callers"
       consensus__ivar:
         type: object
-        default: {}
         "$ref": "#/definitions/ConsensusIvar"
+        description: "Relevant only if ivar is specified in consensus->callers"
       resources:
         type: object
         "$ref": "#/definitions/Resources"
@@ -127,7 +127,7 @@ definitions:
     properties:
       callers:
         type: array
-        default: []
+        description: "Variant-calling methods."
         items:
           type: string
           enum:
@@ -143,7 +143,7 @@ definitions:
     properties:
       callers:
         type: array
-        default: []
+        description: "Consensus-calling methods."
         items:
           type: string
           enum:
@@ -184,7 +184,7 @@ definitions:
         description: "Maximum number of reads to retain per alignment start position. Reads above this threshold will be downsampled. Set to 0 to disable."
       do_postfilter:
         type: boolean
-        default: False
+        examples: [True]
         description: "Whether to do postfiltering or not. Default: False"
       postfilter:
         type: object
@@ -211,76 +211,89 @@ definitions:
       min_mapping_quality:
         type: integer
         default: 30
+        examples: [20]
         description: "Exclude alignments from analysis if they have a mapping quality less than Q."
       min_base_quality:
         type: integer
         default: 20
+        examples: [20]
         description: "Exclude alleles from analysis if their supporting base quality is less than Q."
       mismatch_base_quality_threshold:
         type: integer
         default: 10
+        examples: [10]
         description: "Count mismatches with base quality higher than this."
       read_mismatch_limit:
         type: [integer, "null"]
-        default: "null"
+        examples: [null]
         description: "Exclude reads with more than N mismatches where each mismatch has base quality >= mismatch-base-quality-threshold."
       read_max_mismatch_fraction:
         type: number
         default: 1.0
+        examples: [1.0]
         description: "Exclude reads with more than N [0,1] fraction of mismatches where each mismatch has base quality >= mismatch-base-quality-threshold."
       read_indel_limit:
         type: [integer, "null"]
-        default: "null"
+        examples: [null]
         description: "Exclude reads with more than N separate gaps."
       read_snp_limit:
         type: [integer, "null"]
-        default: "null"
+        examples: [null]
         description: "Exclude reads with more than N base mismatches, ignoring gaps, and quality higher than `mismatch_base_quality_threshold`."
       indel_exclusion_window:
         type: integer
         default: 0
+        examples: [0]
         description: "Ignore portions of alignments this many bases from a putative insertion or deletion allele."
       min_alternate_fraction:
         type: number
         default: 0.05
-        description: "Require at least this fraction of observations supporting an alternate allele within a single individual in the in order to evaluate the position."
+        examples: [0.5]
+        description: "Require at least this fraction of reads supporting the same alternate in order to evaluate it."
       min_alternate_count:
         type: integer
         default: 2
-        description: "Require at least this count of observations supporting an alternate allele within a single individual in order to evaluate the position."
+        examples: [5]
+        description: "Require at least this count of reads supporting the same alternate in order to evaluate it."
       min_coverage:
         type: integer
         default: 10
+        examples: [10]
         description: "Require at least this coverage to process a site."
       limit_coverage:
         type: [integer, "null"]
-        default: "null"
+        examples: [null]
         description: "Downsample per-sample coverage to this level if greater than this coverage."
       skip_coverage:
         type: [integer, "null"]
-        default: "null"
+        examples: [null]
         description: "Skip processing of alignments overlapping positions with coverage >N. This filters sites above this coverage, but will also reduce data nearby."
       ploidy:
         type: integer
         default: 2
+        examples: [2]
         description: "Sets the default ploidy for the analysis to N. Default: 2"
       gvcf:
         type: boolean
         default: false
+        examples: [false]
         description: "Write gVCF output, which indicates coverage in uncalled regions, emitting a record for all bases. Default: False."
       report_all_haplotype_alleles:
         type: boolean
         default: false
+        examples: [false]
         description: "At sites where genotypes are made over haplotype alleles, provide information about all alleles in output, not only those which are called. Default: False."
       report_monorphic:
         type: boolean
         default: false
+        examples: [false]
         description: "Report even loci which appear to be monomorphic, and report all considered alleles, even those which are not in called genotypes. Loci which do not have any potential alternates have '.' for ALT. Default: False"
       do_postfilter:
         type: boolean
+        examples: [true]
+        description: "Whether to do postfiltering or not."
       postfilter:
         type: object
-        default: {}
         "$ref": "#/definitions/VariantsBcftoolsPostfilter"
     if:
       properties:
@@ -314,6 +327,7 @@ definitions:
       count_orphans:
         type: boolean
         default: false
+        examples: [true]
         description: "Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set."
       compute_base_alignment_quality:
         type: string
@@ -322,50 +336,62 @@ definitions:
           - "redo"
           - "full"
         default: "redo"
-        description: "Controls probabilistic realignment for base alignment quality computation. Allowed: 'no', 'redo', 'full'. No' disables it. 'Redo' runs it for problematic regions, 'Full' runs it on all reads."
+        examples: ["redo"]
+        description: "Controls probabilistic realignment for base alignment quality computation. No' disables it. 'Redo' runs it for problematic regions, 'Full' runs it on all reads."
       adjust_mapping_quality:
         type: integer
         default: 0
+        examples: [50]
         description: "Adjust quality for high number of mismatches. Recommended to set to 50 when using BWA."
       max_read_depth:
         type: integer
         default: 250
+        examples: [250]
         description: "At a position, read maximally this number of reads. Should be adjusted to about twice the average read depth as higher read depths usually indicate problematic regions which are often enriched for artefacts."
-      max_depth_indels:
-        type: integer
-        default: 250
-        description: "Skip INDEL calling if the average per-sample depth is above this value."
-      min_base_quality:
-        type: integer
-        default: 13
-        description: "Minimum base quality for a base to be considered."
       min_mapping_quality:
         type: integer
         default: 0
+        examples: [0]
         description: "Minimum mapping quality for an alignment to be used."
+      min_base_quality:
+        type: integer
+        default: 1
+        examples: [1]
+        description: "Minimum base quality for a base to be considered."
+      max_base_quality_cap:
+        type: integer
+        default: 60
+        examples: [60]
+        description: "Caps the base quality to a maximum value. This can be particularly useful on technologies that produce overly optimistic high qualities."
       mpileup_annotate:
         type: array
         items:
           type: string
-        default: ["AD", "ADF", "ADR", "DP"]
-      open_prob:
-        type: integer
-        default: 40
-        description: "Phred-scaled gap open sequencing error probability. Increasing it leads to fewer indel calls."
+          # enum: ["AD", "ADF", "ADR", "DP", "NMBZ","QS","SP","SCR","INFO/AD","INFO/ADF","INFO/ADR","INFO/BQBZ", "INFO/FS", "INFO/IDV", "INFO/IMF", "INFO/MQ0F", "INFO/MQBZ", "INFO/MQSBZ", "INFO/NM", "INFO/NMBZ", "INFO/RPBZ", "INFO/SCBZ", "INFO/SGB", "INFO/VDB", "INFO/MIN_PL_SUM","INFO/SCR"]
+        examples: [["AD", "ADF", "ADR", "DP"]]
+        description: "Tags to add in mpileup. Run `bcftools mpileup --annotate ?` to see tags."
       gap_ext_prob:
         type: integer
         default: 20
+        examples: [20]
         description: "Phred-scaled gap extension sequencing error probability. Reducing it leads to longer indels."
       min_fraction_of_gaps:
         type: number
         default: 0.002
+        examples: [0.05]
         minimum: 0
         maximum: 1
         description: "Minimum fraction of gapped reads."
-      max_base_quality_cap:
+      max_depth_indels:
         type: integer
-        default: 60
-        description: "Caps the base quality to a maximum value. This can be particularly useful on technologies that produce overly optimistic high qualities."
+        default: 250
+        examples: [250]
+        description: "Skip INDEL calling if the average per-sample depth is above this value."
+      open_prob:
+        type: integer
+        default: 40
+        examples: [40]
+        description: "Phred-scaled gap open sequencing error probability. Increasing it leads to fewer indel calls."
       ploidy:
         type: string
         enum:
@@ -375,36 +401,38 @@ definitions:
           - "Y"
           - "1"
           - "2"
-        description: "predefined ploidy. Allowed: 'GRCh37', 'GRCh38', 'X', 'Y', '1', '2'"
+        description: "Predefined ploidy. See `bcftools call --ploidy ?`"
+        examples: ["2"]
       keep_alts:
         type: boolean
         default: false
-        description: "output all alternate alleles present in the alignments even if they do not appear in any of the genotypes."
+        examples: [true]
+        description: "Output all alternate alleles present in the alignments even if they do not appear in any of the genotypes."
       variants_only:
         type: boolean
-        default: true
-        description: "output variant sites only."
+        default: false
+        examples: [true]
+        description: "Output variant sites only."
       prior:
         type: number
         default: 0.0011
+        example: [0.0011]
         minimum: 0
         maximum: 1
         description: "Prior probability for the alternate allele."
       caller_annotate:
         type: array
-        default: ["GQ", "GP"]
+        examples: [["GQ", "GP"]]
         items:
           type: string
-          enum:
-            - "GQ"
-            - "GP"
-            - "INFO/PV4"
-        description: 'Comma-separated list of FORMAT fields to output. Allowed: "GQ", "GP", "INFO/PV4".'
+        description: 'FORMAT tag fields to output. Run `bcftools call --annotate ?` to see tags."'
       do_postfilter:
         type: boolean
+        examples: [true]
+        description: "Whether to do postfiltering or not."
       postfilter:
         type: object
-        default: {}
+        description: "Relevant only if do_postfilter is true."
         "$ref": "#/definitions/VariantsBcftoolsPostfilter"
     if:
       properties:
@@ -440,30 +468,37 @@ definitions:
       microbial_mode:
         type: boolean
         default: false
+        examples: [true]
         description: "Set filters to microbial defaults."
       min_median_base_quality:
         type: integer
         default: 20
+        examples: [20]
         description: "Minimum median base quality of alt reads."
       min_median_mapping_quality:
         type: integer
         default: -1
+        examples: [-1]
         description: "Minimum median mapping quality of alt reads."
       min_median_read_position:
         type: integer
         default: 1
+        examples: [1]
         description: "Minimum median distance of variants from the end of reads."
       min_reads_per_strand:
         type: integer
         default: 0
+        examples: [0]
         description: "Minimum alt reads required on both forward and reverse strands."
       min_slippage_length:
         type: integer
         default: 8
+        examples: [8]
         description: "Minimum number of reference bases in an STR to suspect polymerase slippage."
       pcr_slippage_rate:
         type: number
         default: 0.1
+        examples: [0.1]
         description: "The frequency of polymerase slippage in contexts where it is suspected."
     title: VariantsMutect2Postfilter
     required:
@@ -478,6 +513,19 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      atomize:
+        type: boolean
+        default: false
+        examples: [true]
+        description: "Whether to split MNVs into consecutive SNVs."
+      atom_overlaps:
+        type: string
+        enum:
+          - "missing"
+          - "star"
+        default: "star"
+        examples: ["star"]
+        description: "Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec."
       multiallelic:
         type: [string, "null"]
         enum:
@@ -490,44 +538,48 @@ definitions:
           - "+both"
           - "-both"
           - null
-        description: "OPT - split multiallelic sites into biallelic records (-) or join biallelic sites into multiallelic records (+). An optional type string can follow which controls variant types which should be split or merged together: If only SNP records should be split or merged, specify snps; if both SNPs and indels should be merged separately into two records, specify both; if SNPs and indels should be merged into a single record, specify any."
-      atomize:
-        type: boolean
-        default: false
-        description: "Whether to split MNVs into consecutive SNVs."
-      atom_overlaps:
-        type: string
-        enum:
-          - "missing"
-          - "star"
-          - null
-        description: "OPT - Allowed: 'missing', 'star'. Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec."
+        default: null
+        examples: ["+any"]
+        description: "Split multiallelic sites into biallelic records (-) or join biallelic sites into multiallelic records (+). An optional type string can follow which controls variant types which should be split or merged together: If only SNP records should be split or merged, specify snps; if both SNPs and indels should be merged separately into two records, specify both; if SNPs and indels should be merged into a single record, specify any."
+      additional_tags:
+        type: array
+        examples: [["AF", "AC", "AN", "VAF1"]]
+        items:
+          type: string
+        description: "Additional tags to include by fill-tags plugin. If empty, all possible tags are added. See 'bcftools plugin fill-tags -- --list-tags'."
       snp_gap:
-        type: integer
-        default: 0
-        description: "filter SNPs within INT base pairs of an indel or other other variant type. Set to 0 to turn off"
+        type: [integer, "null"]
+        default: null
+        examples: [3]
+        description: "Filter SNPs within INT base pairs of an indel or other other variant type. Set to 0 to turn off"
       indel_gap:
-        type: integer
-        default: 0
-        description: "filter clusters of indels separated by INT or fewer base pairs allowing only one to pass. Set to 0 to turn off"
+        type: [integer, "null"]
+        default: null
+        examples: [10]
+        description: "Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass. Set to 0 to turn off"
       set_gts_for_failed:
         type: [string, "null"]
         enum:
           - "missing"
           - "reference"
           - null
-        description: "OPT - Allowed: 'missing', 'reference'. Set genotypes of failed samples to missing value (.) or reference allele (0)."
+        default: null
+        examples: ["missing"]
+        description: "Set genotypes of failed samples to `missing` value (.) or `reference` allele (0)."
       include:
         type: [string, "null"]
         default: null
+        examples: ['INFO/DP>=10 & GT="alt" & VAF1>=0.50']
         description: "include only sites for which EXPRESSION is true"
       exclude:
         type: [string, "null"]
         default: null
+        examples: [null]
         description: "exclude sites for which EXPRESSION is true"
       trim_alt_alleles:
         type: boolean
         default: false
+        examples: [true]
         description: "Remove alleles not seen in the genotype fields from the ALT column. Note that if no alternate allele remains after trimming, the record itself is not removed but ALT is set to '.' If the option -s or -S is given, removes alleles not seen in the subset. INFO and FORMAT tags declared as Type=A, G or R will be trimmed as well."
     required:
       - multiallelic
@@ -539,6 +591,7 @@ definitions:
       - include
       - exclude
       - trim_alt_alleles
+      - additional_tags
     title: VariantsBcftoolsPostfilter
   VariantsIvar:
     type: object
@@ -547,35 +600,54 @@ definitions:
       count_orphans:
         type: boolean
         default: false
+        examples: [true]
         description: "Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set."
       max_read_depth:
         type: integer
-        default: 600000
-        description: "This limits the number of reads to load in memory per input file. Decreases needed memory but increases running time."
-      min_base_quality:
-        type: integer
-        default: 13
-        description: "Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality."
+        default: 8000
+        examples: [0]
+        description: "This limits the number of reads to load in memory per input file. Decreases needed memory but increases running time. Zero sets it to the highest possible value."
+      redo_base_alignment_quality:
+        type: boolean
+        default: true
+        examples: [false]
+        description: "If true, samtools recalculates BAQ on the fly, ignore existing BQ tags."
       min_mapping_quality:
         type: integer
         default: 0
+        examples: [20]
         description: "Minimum mapping quality for an alignment to be used."
+      min_base_quality:
+        type: integer
+        default: 13
+        examples: [0]
+        description: "Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality."
+      absolutely_all_positions:
+        type: boolean
+        default: false
+        examples: [false]
+        description: "If true, mpileup outputs absolutely all positions, including unused reference sequences."
       min_base_quality_threshold:
         type: integer
         default: 20
+        examples: [20]
         description: "Minimum quality score threshold to count base in ivar variants"
       min_frequency_threshold:
         type: number
-        default: 0
+        default: 0.03
+        examples: [0.03]
         minimum: 0
         maximum: 1
         description: "Minimum frequency threshold to call variants."
       min_read_depth:
         type: integer
-        default: 10
+        default: 0
+        examples: [10]
         description: "Minimum read depth to call variants"
       do_postfilter:
         type: boolean
+        examples: [true]
+        description: "Whether to do postfiltering or not."
       postfilter:
         type: object
         "$ref": "#/definitions/VariantsIvarPostfilter"
@@ -586,6 +658,17 @@ definitions:
     then:
       required:
         - postfilter
+    required:
+      - count_orphans
+      - max_read_depth
+      - redo_base_alignment_quality
+      - min_mapping_quality
+      - min_base_quality
+      - absolutely_all_positions
+      - min_base_quality_threshold
+      - min_frequency_threshold
+      - min_read_depth
+      - do_postfilter
     title: VariantsIvar
   VariantsIvarPostfilter:
     type: object
@@ -593,20 +676,25 @@ definitions:
     properties:
       min_alt_depth:
         type: integer
-        default: 2
+        examples: [2]
         description: "Mixed positions must have at least this ALT_DP value to be counted"
       min_alt_freq:
         type: number
-        default: 0.1
+        examples: [0.1]
         description: "Mixed positions must have at least this ALT_FREQ value to be counted"
       max_alt_freq:
         type: number
-        default: 0.9
+        examples: [0.9]
         description: "Mixed positions cannot have ALT_FREQ equal or greater than this value"
       min_total_depth:
         type: integer
-        default: 10
+        examples: [10]
         description: "Mixed positions must have at least this TOTAL_DP value to be counted"
+    required:
+      - min_alt_depth
+      - min_alt_freq
+      - max_alt_freq
+      - min_total_depth
     title: VariantsIvarPostfilter
   ConsensusIvar:
     type: object
@@ -615,33 +703,68 @@ definitions:
       count_orphans:
         type: boolean
         default: false
+        examples: [true]
         description: "Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set."
       max_read_depth:
         type: integer
-        default: 1000
-        description: "This limits the number of reads to load in memory per input file. Decreases needed memory but increases running time."
-      min_base_quality:
-        type: integer
-        default: 13
-        description: "Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality."
+        default: 8000
+        examples: [0]
+        description: "This limits the number of reads to load in memory per input file. Decreases needed memory but increases running time. Zero sets it to the highest possible value."
+      redo_base_alignment_quality:
+        type: boolean
+        default: true
+        examples: [false]
+        description: "If true, samtools recalculates BAQ on the fly, ignore existing BQ tags."
       min_mapping_quality:
         type: integer
         default: 0
+        examples: [20]
         description: "Minimum mapping quality for an alignment to be used."
+      min_base_quality:
+        type: integer
+        default: 13
+        examples: [0]
+        description: "Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality."
+      absolutely_all_positions:
+        type: boolean
+        default: false
+        examples: [false]
+        description: "If true, mpileup outputs absolutely all positions, including unused reference sequences."
       consensus_base_quality_threshold:
         type: integer
         default: 20
+        examples: [20]
         description: "Minimum quality score threshold to count base in ivar consensus"
       consensus_frequency_threshold:
         type: number
         default: 0
+        examples: [0]
         minimum: 0
         maximum: 1
         description: "Minimum frequency threshold to call consensus."
+      insertion_frequency_threshold:
+        type: number
+        default: 0.8
+        examples: [0.8]
+        minimum: 0
+        maximum: 1
+        description: "Minimum insertion frequency threshold(0 - 1) to call consensus."
       min_consensus_depth:
         type: integer
         default: 10
+        examples: [10]
         description: "Minimum depth to call consensus"
+    required:
+      - count_orphans
+      - max_read_depth
+      - redo_base_alignment_quality
+      - min_mapping_quality
+      - min_base_quality
+      - absolutely_all_positions
+      - consensus_base_quality_threshold
+      - consensus_frequency_threshold
+      - insertion_frequency_threshold
+      - min_consensus_depth
     title: ConsensusIvar
   Resources:
     type: object
@@ -649,23 +772,27 @@ definitions:
     properties:
       variants__freebayes_mem_mb:
         type: integer
-        default: 4096
+        examples: [8192]
         description: "Number of memory in megabytes to allocate for freebayes"
+      variants__mutect2_mem_mb:
+        type: integer
+        examples: [8192]
+        description: "Number of memory in megabytes to allocate for mutect2"
     title: Resources
   Threads:
     additionalProperties: true
     properties:
       variants__bcftools:
         type: integer
-        default: 1
+        examples: [4]
         description: "Number of threads to use for bcftools variants"
       variants__freebayes:
         type: integer
-        default: 1
+        examples: [4]
         description: "Number of threads to use for freebayes variants"
       variants__mutect2:
         type: integer
-        default: 1
+        examples: [4]
         description: "Number of threads to use for mutect2 variants"
     title: Threads
   ModuleVersions:
@@ -674,12 +801,12 @@ definitions:
     properties:
       reads:
         type: string
-        default: 1
+        default: "v3.3.0"
         pattern: "v[0-9]+.[0-9]+.[0-9]+"
         description: "Version of reads module"
       mapping:
         type: string
-        default: 1
+        default: "v2.2.0"
         pattern: "v[0-9]+.[0-9]+.[0-9]+"
         description: "Version of mapping module"
     title: ModuleVersions
