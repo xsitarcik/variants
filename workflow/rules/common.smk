@@ -155,7 +155,7 @@ def get_bcftools_norm_params(tool: str):
 def parse_tags_for_bcftools_fill_tags(tool: str):
     if not config[f"variants__{tool}"]["do_postfilter"]:
         return ""
-    tags = config[f"variants__{tool}"]["postfilter"]["additional_tags"]
+    tags = ",".join(config[f"variants__{tool}"]["postfilter"]["additional_tags"])
     if tags:
         return f"--tags {tags}"
     else:
