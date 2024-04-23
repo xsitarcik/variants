@@ -1,0 +1,8 @@
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - coreutils
+  - sed=4.8
+  - gawk=5.1.0

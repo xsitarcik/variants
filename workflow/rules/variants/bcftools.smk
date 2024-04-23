@@ -5,7 +5,7 @@ rule bcftools__mpileup_bcf:
         index=infer_reference_faidx,
         bai=infer_bai_for_sample_and_ref,
     output:
-        pileup=temp("results/variants_bcftools/{reference}/original/{sample}.pileup.bcf"),
+        pileup=temp("results/variants/{reference}/{sample}/bcftools_all.pileup.bcf"),
     params:
         uncompressed_bcf=True,
         extra=get_bcftools_mpileup_params(),
@@ -18,9 +18,9 @@ rule bcftools__mpileup_bcf:
 
 rule bcftools__call_variants:
     input:
-        pileup="results/variants_bcftools/{reference}/original/{sample}.pileup.bcf",
+        pileup="results/variants/{reference}/{sample}/bcftools_all.pileup.bcf",
     output:
-        calls=temp("results/variants_bcftools/{reference}/original/{sample}.bcftools.vcf"),
+        calls=temp("results/variants/{reference}/{sample}/bcftools_all.bcftools.vcf"),
     params:
         caller="--multiallelic-caller",
         extra=get_bcftools_calling_params(),
@@ -31,29 +31,30 @@ rule bcftools__call_variants:
         "v3.7.0/bio/bcftools/call"
 
 
-rule gatk__prepare_vcf:
+rule bcftools__gatk_prepare_vcf:
     input:
-        vcf="results/variants_bcftools/{reference}/original/{sample}.bcftools.vcf",
+        vcf="results/variants/{reference}/{sample}/bcftools_all.bcftools.vcf",
         ref=infer_reference_fasta,
         ref_dct=infer_reference_dict,
     output:
-        vcf=temp("results/variants_bcftools/{reference}/original/{sample}.vcf"),
+        vcf=temp("results/variants/{reference}/{sample}/bcftools_all.vcf"),
+        idx=temp("results/variants/{reference}/{sample}/bcftools_all.vcf.idx"),
     log:
-        "logs/variants_bcftools/prepare_vcf/{reference}/{sample}.log",
+        "logs/variants_bcftools/gatk_prepare_vcf/{reference}/{sample}.log",
     params:
-        extra="",  #"--select-type-to-include SNP",  # optional filter arguments, see GATK docs
-        java_opts="",  # optional
+        extra="",
+        java_opts="",
     wrapper:
         "v3.7.0/bio/gatk/selectvariants"
 
 
 rule bcftools__normalize_vcf:
     input:
-        vcf="results/variants_bcftools/{reference}/original/{sample}.vcf",
+        vcf="results/variants/{reference}/{sample}/bcftools_all.vcf",
         ref=infer_reference_fasta,
         index=infer_reference_faidx,
     output:
-        temp("results/variants_bcftools/{reference}/normalized/{sample}.norm.bcf"),
+        temp("results/variants/{reference}/{sample}/bcftools_norm.bcf"),
     params:
         uncompressed_bcf=True,
         extra=get_bcftools_norm_params("bcftools"),
@@ -66,9 +67,9 @@ rule bcftools__normalize_vcf:
 
 rule bcftools__annotate_vcf:
     input:
-        "results/variants_bcftools/{reference}/normalized/{sample}.norm.bcf",
+        "results/variants/{reference}/{sample}/bcftools_norm.bcf",
     output:
-        temp("results/variants_bcftools/{reference}/normalized/{sample}.annot.vcf"),
+        temp("results/variants/{reference}/{sample}/bcftools_annot.vcf"),
     log:
         "logs/variants_bcftools/annotate_vcf/{reference}/{sample}.log",
     conda:
@@ -79,22 +80,24 @@ rule bcftools__annotate_vcf:
 
 rule bcftools__fill_tags:
     input:
-        "results/variants_bcftools/{reference}/normalized/{sample}.annot.vcf",
+        "results/variants/{reference}/{sample}/bcftools_annot.vcf",
     output:
-        temp("results/variants_bcftools/{reference}/normalized/{sample}.vcf"),
+        temp("results/variants/{reference}/{sample}/bcftools_filltags.vcf"),
     log:
-        "logs/variants_bcftools/tag_fill/{reference}/{sample}.log",
+        "logs/variants_bcftools/fill_tags/{reference}/{sample}.log",
+    params:
+        tags=parse_tags_for_bcftools_fill_tags("bcftools"),
     conda:
         "../../envs/bcftools.yaml"
     shell:
-        "bcftools plugin fill-tags {input} -O v -o {output} -- --tags 'AF,AC,AN' 1> {log} 2>&1"
+        "bcftools plugin fill-tags {input} -O v -o {output} -- {params.tags} 1> {log} 2>&1"
 
 
 rule bcftools__filter_vcf:
     input:
-        "results/variants_bcftools/{reference}/normalized/{sample}.vcf",
+        "results/variants/{reference}/{sample}/bcftools_filltags.vcf",
     output:
-        temp("results/variants_bcftools/{reference}/filtered/{sample}.filtered.bcf"),
+        temp("results/variants/{reference}/{sample}/bcftools_filtered.bcf"),
     params:
         extra=get_bcftools_filter_params("bcftools"),
     log:
@@ -104,12 +107,12 @@ rule bcftools__filter_vcf:
         "v3.7.0/bio/bcftools/filter"
 
 
-rule bcftools__view_filtered_vcf:
+rule bcftools__view_filtered:
     input:
-        "results/variants_bcftools/{reference}/filtered/{sample}.filtered.bcf",
+        "results/variants/{reference}/{sample}/bcftools_filtered.bcf",
     output:
         report(
-            "results/variants_bcftools/{reference}/filtered/{sample}.vcf",
+            "results/variants/{reference}/{sample}/bcftools_filtered.vcf",
             category="{sample} - {reference}",
             labels={
                 "Type": "Variants - bcftools/filtered",

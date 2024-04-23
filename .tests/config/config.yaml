@@ -1,137 +1,183 @@
 reads: # Specify the order and methods for each read processing step. If no method is specified, the step will not be performed.
-  subsampling: null # OPT - specify method of subsampling. Allowed: "seqtk", "null".
-  trimming: "cutadapt" # OPT - specify method of trimming. Allowed: "cutadapt", "null".
-  decontamination: null # OPT - specify method of decontamination. Allowed: "kraken", "null".
-  deduplication: null # OPT - specify method of deduplication. Allowed: "fastuniq", "null".
-  _generate_fastqc_for: [] # OPT - specify which steps to generate fastqc for. Allowed: "original"."subsampling", "trimming", "decontamination", "deduplication" or empty list (default: empty list).
+  subsampling: null # null/enum: Subsampling method, if not set, subsampling will not be performed. Allowed: 'seqtk'.
+  trimming: "cutadapt" # null/enum: Trimming method, if not set, trimming will not be performed. Allowed: 'cutadapt'.
+  decontamination: null # null/enum: Decontamination method, if not set, decontamination will not be performed. Allowed: 'kraken'.
+  deduplication: null # null/enum: Deduplication method, if not set, deduplication will not be performed. Allowed: 'fastuniq'.
+  _generate_fastqc_for: ["trimming"] # list of enum: Specify which steps to generate fastqc for. Allowed: 'original','subsampling','trimming','decontamination','deduplication'.
 
 mapping:
   mapping: "bwa" # Specify method for mapping. Allowed: "bwa".
-  reference_dirs: ["test_data/reference/sars_cov_2"] # specify list of reference dirs to map against. Each dir must contain a fasta file names as the basename dir.
+  reference_fasta_paths: ["test_data/reference/sars_cov_2/sars_cov_2.fa"] # specify list of reference dirs to map against. Each dir must contain a fasta file names as the basename dir.
   deduplication: "picard" # OPT - specify method for mapping deduplication. Allowed: "picard", null.
-  _generate_qualimap: [] # OPT - specify which steps to generate qualimap for. Allowed: "mapping", "deduplication" or empty list (default: empty list).
+  _generate_qualimap: ["deduplication"] # OPT - specify which steps to generate qualimap for. Allowed: "mapping", "deduplication" or empty list (default: empty list).
 
 variants:
-  callers: ["bcftools", "ivar", "freebayes"] # Specify method for variant calling: "bcftools", "ivar".
-
+  callers: ["bcftools", "ivar", "mutect2", "freebayes"] # list of enum([]): Variant-calling methods. Allowed: 'bcftools','ivar','mutect2','freebayes'.
 consensus:
-  callers: ["ivar"]
+  callers: ["ivar"] # list of enum([]): Consensus-calling methods. Allowed: 'ivar'.
 
 ### HYPERPARAMETERS #############################
-reads__trimming__cutadapt:
-  # 1st stage - trimming
-  cut_from_start_r1: null # OPT - removes a specified number of bases from the beginning of the R1 read.
-  cut_from_start_r2: null # OPT - removes a specified number of bases from the beginning of the R2 read.
-  cut_from_end_r1: null # OPT - removes a specified number of bases from the end of the R1 read.
-  cut_from_end_r2: null # OPT - removes a specified number of bases from the end of the R2 read.
-  quality_cutoff_from_5_end_r1: 20 # cutoff on 5' end of R1 read. The second step.
-  quality_cutoff_from_3_end_r1: 20 # cutoff on 3' end of R1 read. The second step.
-  quality_cutoff_from_5_end_r2: 20 # cutoff on 5' end of R2 read. The second step.
-  quality_cutoff_from_3_end_r2: 20 # cutoff on 3' end of R2 read. The second step.
 
-  # 2nd stage - Adapter removal
-  adapter_removal: # OPT - set "do" to false to skip this step.
-    do: false # If true, all below options are required. Else, they are ignored/can be deleted.
+reads__subsampling__seqtk:
+  seed: 1
+  n_reads: 1
+  reduce_memory: true
 
-  # 3rd stage - post adapter trimming
-  shorten_to_length: null # OPT - both R1 and R2 are shortened to this length.
-  trim_N_bases_on_ends: null # OPT - trim flanking N's on both read ends.
+reads__trimming__cutadapt: # Relevant only if reads->trimming is set to cutadapt.
+  cut_from_start_r1: null # null/int: Removes a specified number of bases from the beginning of the R1 read.
+  cut_from_start_r2: null # null/int: Removes a specified number of bases from the beginning of the R2 read.
+  cut_from_end_r1: null # null/int: Removes a specified number of bases from the end of the R1 read.
+  cut_from_end_r2: null # null/int: Removes a specified number of bases from the end of the R2 read.
+  quality_cutoff_from_3_end_r1: 20 # int(20): Removes lower quality bases from the 3' end of the R1 read.
+  quality_cutoff_from_5_end_r1: 20 # int(20): Removes lower quality bases from the 5' end of the R1 read.
+  quality_cutoff_from_3_end_r2: 20 # int(20): Removes lower quality bases from the 3' end of the R2 read.
+  quality_cutoff_from_5_end_r2: 20 # int(20): Removes lower quality bases from the 5' end of the R2 read.
+  nextseq_trimming_mode: false # bool(false): Modify quality-trimming algorithm to expect two-color chemistry data (NextSeq).
+  do_adapter_removal: false # bool(false): Whether to do adapter removal or not.
+  adapter_removal: # Relevant only if do_adapter_removal is set to true.
+    action: "trim" # enum(trim): Defines an action to perform with the found adapter. Allowed: 'retain','trim','mask','none','lowercase'.
+    overlap: 3 # int(3): Minimum number of bases required to overlap with the adapter.
+    error_rate: 0.1 # float(0.1): Error tolerance used when searching for adapter.
+    times: 1 # int(1): How many times to repeat adapter removal.
+    keep_trimmed_only: false # bool(false): Discard reads with no adapters found.
+    adapters_anywhere_file: "test_data/adapters/artic_v4.fa" # null/str: Fasta file path with adapters to be matched 'anywhere'.
+    adapters_3_end_file: null # null/str: Fasta file path with adapters to be matched at 3'end.
+    adapters_5_end_file: null # null/str: Fasta file path with adapters to be matched at 5'end.
+  shorten_to_length: null # null/int: Shorten each read to the specified length. Corresponds to the cutadapt length parameter.
+  trim_N_bases_on_ends: false # bool(false): Set to true to trim 'N' bases on ends.
+  min_length_r1: null # null/int: Discards R1 reads shorter than this. Recommended to set at least to 1, to discard empty reads.
+  min_length_r2: null # null/int: Discards R2 reads shorter than this. Recommended to set at least to 1, to discard empty reads.
+  max_length_r1: null # null/int: Discards R1 reads longer than this value.
+  max_length_r2: null # null/int: Discards R2 reads longer than this value.
+  max_n_bases: null # null/int: Removes reads with more 'N' bases than the specified number.
+  max_expected_errors: null # null/int: Discard reads whose expected number of errors exceeds this value.
 
-  # 4th stage - Filtering
-  min_length_r1: null # OPT - minimum R1 read length. If R1 read is shorter, both R1 and R2 reads are discarded. The fourth step.
-  min_length_r2: null # OPT - minimum R2 read length. If R2 read is shorter, both R1 and R2 reads are discarded. The fourth step.
-  max_length_r1: null # OPT - maximum R1 read length. If R1 read is longer, both R1 and R2 reads are discarded. The fourth step.
-  max_length_r2: null # OPT - maximum R2 read length. If R2 read is longer, both R1 and R2 reads are discarded. The fourth step.
-  max_n_bases: null # OPT - Discard read if R1 or R2 has more than the specified number of N bases. The fifth step.
-  max_expected_errors: null # OPT - Discard read if R1 or R2 has more expected errors than this.
+reads__decontamination__kraken:
+  kraken_dir: "path_to_kraken/k2_viral_20230314" # Directory containing kraken DB files. If does not exist, will be downloaded using the dirname.
+  # get KRAKEN_TAG from https://benlangmead.github.io/aws-indexes/k2
+  exclude_taxa_ids: # list of taxonomy IDs to exclude.
+    - 9606 # Homo Sapiens
+  exclude_children: false # Whether to exclude reads classified at more specific levels than specified taxonomy ID levels.
+  exclude_ancestors: false # Whether to exclude reads classified at all taxonomy levels between root and the specified taxonomy ID levels.
+  save_memory: true # If true, kraken limits RAM memory usage but sacrifices speed.
+  generate_krona: false # If true, krona is generated from kraken report
+  krona_dir: null # Directory where krona dataset is located or will be downloaded.
 
-variants__bcftools: # Uses bcftools mpileup and bcftools call.
-  min_base_quality: 0 # Minimum base quality for a base to be considered.
-  min_mapping_quality: 13 # Minimum mapping quality for an alignment to be used.
-  adjust_quality_coef: 50 # Adjust quality for high number of mismatches. See bcftools manual. Set to 0 to disable.
-  min_fraction_of_gaps: 0.05 # Minimum fraction of gapped reads.
-  annotation: "FORMAT/AD,FORMAT/ADF,FORMAT/ADR,FORMAT/DP" # Comma-separated list of FORMAT and INFO tags to output.
-  redo_base_alignment_qual: True # Recalculate BAQ on the fly, ignore existing BQ tags.
-  ploidy: "GRCh38" # Predefined ploidy.
-  keep_alts: True # Report all alleles, not only those which are in called genotypes.
-  variants_only: True # Output variant sites only.
-  format_fields: "GQ,GP" # Comma-separated list of FORMAT fields to output for each sample.
+reads__deduplication__fastuniq: {} # Relevant only if reads->deduplication is set to fastuniq. There are no parameters to be defined.
 
-  do_postfilter: True # Whether to postfilter variants.
-  postfilter: # Uses bcftools norm, annotate and filter.
-    multiallelic: "+any" # Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
-    multi_overlaps: null # OPT - Allowed: "missing", "reference". Use the reference (0) or missing (.) allele for overlapping alleles after splitting multiallelic sites.
-    atomize: False # Whether to split MNVs into consecutive SNVs.
-    atom_overlaps: "star" # OPT - Allowed: "missing", "star". Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec.
-    snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
-    indel_gap: 10 # Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
-    set_gts_for_failed: "missing" # Either missing value '.'  or reference allele ('0').
-    include: 'INFO/DP>=10 & GT="alt" & (DP4[2]+DP4[3])/INFO/DP>=0.50' # Filter which sites to include.
-    exclude: "" # Filter which sites to include.
-    trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
+variants__bcftools: # Relevant only if bcftools is specified in variants->callers.
+  count_orphans: true # bool(false): Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
+  compute_base_alignment_quality: "redo" # enum(redo): Controls probabilistic realignment for base alignment quality computation. No' disables it. 'Redo' runs it for problematic regions, 'Full' runs it on all reads. Allowed: 'no','redo','full'.
+  adjust_mapping_quality: 50 # int(0): Adjust quality for high number of mismatches. Recommended to set to 50 when using BWA.
+  max_read_depth: 250 # int(250): At a position, read maximally this number of reads. Should be adjusted to about twice the average read depth as higher read depths usually indicate problematic regions which are often enriched for artefacts.
+  min_mapping_quality: 0 # int(0): Minimum mapping quality for an alignment to be used.
+  min_base_quality: 1 # int(1): Minimum base quality for a base to be considered.
+  max_base_quality_cap: 60 # int(60): Caps the base quality to a maximum value. This can be particularly useful on technologies that produce overly optimistic high qualities.
+  mpileup_annotate: ["AD", "ADF", "ADR", "DP"] # list of str: Tags to add in mpileup. Run `bcftools mpileup --annotate ?` to see tags.
+  gap_ext_prob: 20 # int(20): Phred-scaled gap extension sequencing error probability. Reducing it leads to longer indels.
+  min_fraction_of_gaps: 0.05 # float(0.002): Minimum fraction of gapped reads.
+  max_depth_indels: 250 # int(250): Skip INDEL calling if the average per-sample depth is above this value.
+  open_prob: 40 # int(40): Phred-scaled gap open sequencing error probability. Increasing it leads to fewer indel calls.
+  ploidy: "2" # enum: Predefined ploidy. See `bcftools call --ploidy ?` Allowed: 'GRCh37','GRCh38','X','Y','1','2'.
+  keep_alts: true # bool(false): Output all alternate alleles present in the alignments even if they do not appear in any of the genotypes.
+  variants_only: true # bool(false): Output variant sites only.
+  prior: 0.0011 # float(0.0011): Prior probability for the alternate allele.
+  caller_annotate: ["GQ", "GP"] # list of str: FORMAT tag fields to output. Run `bcftools call --annotate ?` to see tags.".
+  do_postfilter: true # bool: Whether to do postfiltering or not.
+  postfilter: # Relevant only if do_postfilter is true.
+    atomize: true # bool(false): Whether to split MNVs into consecutive SNVs.
+    atom_overlaps: "star" # enum(star): Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec. Allowed: 'missing','star'.
+    multiallelic: "+any" # null/enum: Split multiallelic sites into biallelic records (-) or join biallelic sites into multiallelic records (+). An optional type string can follow which controls variant types which should be split or merged together: If only SNP records should be split or merged, specify snps; if both SNPs and indels should be merged separately into two records, specify both; if SNPs and indels should be merged into a single record, specify any. Allowed: '+any','-any','+snps','-snps','+indels','-indels','+both','-both'.
+    additional_tags: ["AF", "AC", "AN", "VAF1"] # list of str: Additional tags to include by fill-tags plugin. If empty, all possible tags are added. See 'bcftools plugin fill-tags -- --list-tags'.
+    snp_gap: 3 # null/int: Filter SNPs within INT base pairs of an indel or other other variant type. Set to 0 to turn off.
+    indel_gap: 10 # null/int: Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass. Set to 0 to turn off.
+    set_gts_for_failed: "missing" # null/enum: Set genotypes of failed samples to `missing` value (.) or `reference` allele (0). Allowed: 'missing','reference'.
+    include: 'INFO/DP>=10 & GT="alt" & VAF1>=0.50' # null/str: include only sites for which EXPRESSION is true.
+    exclude: null # null/str: exclude sites for which EXPRESSION is true.
+    trim_alt_alleles: true # bool(false): Remove alleles not seen in the genotype fields from the ALT column. Note that if no alternate allele remains after trimming, the record itself is not removed but ALT is set to '.' If the option -s or -S is given, removes alleles not seen in the subset. INFO and FORMAT tags declared as Type=A, G or R will be trimmed as well.
 
-variants__ivar:
-  count_orphans: false # Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
-  max_read_depth: 600000 # Limits the number of reads to load in memory per input file.
-  min_base_quality: 13 # Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality.
-  min_mapping_quality: 20 # Minimum mapping quality for an alignment to be used.
-  min_base_quality_threshold: 20 # Minimum quality score threshold to count base.
-  min_frequency_threshold: 0.03 # Minimum frequency threshold (0 - 1) to call variants.
-  min_read_depth: 10 # Minimum read depth to call variants.
-
-  do_postfilter: True # Whether to postfilter variants.
+variants__freebayes: # Relevant only if freebayes is specified in variants->callers.
+  min_mapping_quality: 20 # int(30): Exclude alignments from analysis if they have a mapping quality less than Q.
+  min_base_quality: 20 # int(20): Exclude alleles from analysis if their supporting base quality is less than Q.
+  mismatch_base_quality_threshold: 10 # int(10): Count mismatches with base quality higher than this.
+  read_mismatch_limit: null # null/int: Exclude reads with more than N mismatches where each mismatch has base quality >= mismatch-base-quality-threshold.
+  read_max_mismatch_fraction: 1.0 # float(1.0): Exclude reads with more than N [0,1] fraction of mismatches where each mismatch has base quality >= mismatch-base-quality-threshold.
+  read_indel_limit: null # null/int: Exclude reads with more than N separate gaps.
+  read_snp_limit: null # null/int: Exclude reads with more than N base mismatches, ignoring gaps, and quality higher than `mismatch_base_quality_threshold`.
+  indel_exclusion_window: 0 # int(0): Ignore portions of alignments this many bases from a putative insertion or deletion allele.
+  min_alternate_fraction: 0.5 # float(0.05): Require at least this fraction of reads supporting the same alternate in order to evaluate it.
+  min_alternate_count: 5 # int(2): Require at least this count of reads supporting the same alternate in order to evaluate it.
+  min_coverage: 10 # int(10): Require at least this coverage to process a site.
+  limit_coverage: null # null/int: Downsample per-sample coverage to this level if greater than this coverage.
+  skip_coverage: null # null/int: Skip processing of alignments overlapping positions with coverage >N. This filters sites above this coverage, but will also reduce data nearby.
+  ploidy: 2 # int(2): Sets the default ploidy for the analysis to N. Default: 2.
+  gvcf: false # bool(false): Write gVCF output, which indicates coverage in uncalled regions, emitting a record for all bases. Default: False.
+  report_all_haplotype_alleles: false # bool(false): At sites where genotypes are made over haplotype alleles, provide information about all alleles in output, not only those which are called. Default: False.
+  report_monorphic: false # bool(false): Report even loci which appear to be monomorphic, and report all considered alleles, even those which are not in called genotypes. Loci which do not have any potential alternates have '.' for ALT. Default: False.
+  do_postfilter: true # bool: Whether to do postfiltering or not.
   postfilter:
-    min_alt_depth: 2 # Mixed positions must have at least this ALT_DP value.
-    min_alt_freq: 0.1 # Mixed positions must have at least this ALT_FREQ value.
-    max_alt_freq: 0.9 # Mixed positions cannot have ALT_FREQ value equal or larger than this.
-    min_total_depth: 10 # Mixed positions must have at least this TOTAL_DP value.
+    atomize: true # bool(false): Whether to split MNVs into consecutive SNVs.
+    atom_overlaps: "star" # enum(star): Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec. Allowed: 'missing','star'.
+    multiallelic: "+any" # null/enum: Split multiallelic sites into biallelic records (-) or join biallelic sites into multiallelic records (+). An optional type string can follow which controls variant types which should be split or merged together: If only SNP records should be split or merged, specify snps; if both SNPs and indels should be merged separately into two records, specify both; if SNPs and indels should be merged into a single record, specify any. Allowed: '+any','-any','+snps','-snps','+indels','-indels','+both','-both'.
+    additional_tags: ["AF", "AC", "AN", "VAF1"] # list of str: Additional tags to include by fill-tags plugin. If empty, all possible tags are added. See 'bcftools plugin fill-tags -- --list-tags'.
+    snp_gap: 3 # null/int: Filter SNPs within INT base pairs of an indel or other other variant type. Set to 0 to turn off.
+    indel_gap: 10 # null/int: Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass. Set to 0 to turn off.
+    set_gts_for_failed: "missing" # null/enum: Set genotypes of failed samples to `missing` value (.) or `reference` allele (0). Allowed: 'missing','reference'.
+    include: 'INFO/DP>=10 & GT="alt" & VAF1>=0.50' # null/str: include only sites for which EXPRESSION is true.
+    exclude: null # null/str: exclude sites for which EXPRESSION is true.
+    trim_alt_alleles: true # bool(false): Remove alleles not seen in the genotype fields from the ALT column. Note that if no alternate allele remains after trimming, the record itself is not removed but ALT is set to '.' If the option -s or -S is given, removes alleles not seen in the subset. INFO and FORMAT tags declared as Type=A, G or R will be trimmed as well.
 
-variants__freebayes:
-  # input filters for freebayes
-  min_mapping_quality: 30 # Exclude alignments from analysis if they have a mapping quality less than Q. Default: 30.
-  min_base_quality: 20 # Exclude alleles from analysis if their supporting base quality is less than Q. Default: 20.
-  mismatch_base_quality_threshold: 10 # Count mismatches with base quality higher than this. Default: 10.
-  read_mismatch_limit: null # OPT - Exclude reads with more than N mismatches where each mismatch has base quality >= mismatch-base-quality-threshold. Default: null.
-  read_max_mismatch_fraction: 1.0 # Exclude reads with more than N [0,1] fraction of mismatches where each mismatch has base quality >= mismatch-base-quality-threshold. Default: 1.0.
-  read_indel_limit: null # OPT - Exclude reads with more than N separate gaps. Default: null.
-  read_snp_limit: null # OPT - Exclude reads with more than N base mismatches, ignoring gaps, and quality higher than `mismatch_base_quality_threshold`. Default: null.
-  indel_exclusion_window: 0 # Ignore portions of alignments this many bases from a putative insertion or deletion allele. Default: 0.
-  min_alternate_fraction: 0.05 # Require at least this fraction of observations supporting an alternate allele within a single individual in the in order to evaluate the position. Default: 0.05.
-  min_alternate_count: 2 # Require at least this count of observations supporting an alternate allele within a single individual in order to evaluate the position. Default: 2.
-  min_coverage: 10 # Require at least this coverage to process a site. Default: 0.
-  limit_coverage: null # OPT - Integer. Downsample per-sample coverage to this level if greater than this coverage. Default: null.
-  skip_coverage: null # OPT - Integer. Skip processing of alignments overlapping positions with coverage >N. This filters sites above this coverage, but will also reduce data nearby. Default: null.
-  ploidy: 2 # Sets the default ploidy for the analysis to N. Default: 2
-  gvcf: False # Write gVCF output, which indicates coverage in uncalled regions, emitting a record for all bases. Default: False.
-  report_all_haplotype_alleles: False # At sites where genotypes are made over haplotype alleles, provide information about all alleles in output, not only those which are called. Default: False.
-  report_monorphic: False # Report even loci which appear to be monomorphic, and report all considered alleles, even those which are not in called genotypes. Loci which do not have any potential alternates have '.' for ALT. Default: False
+variants__ivar: # Relevant only if ivar is specified in variants->callers.
+  count_orphans: true # bool(false): Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
+  max_read_depth: 0 # int(8000): This limits the number of reads to load in memory per input file. Decreases needed memory but increases running time. Zero sets it to the highest possible value.
+  redo_base_alignment_quality: false # bool(true): If true, samtools recalculates BAQ on the fly, ignore existing BQ tags.
+  min_mapping_quality: 20 # int(0): Minimum mapping quality for an alignment to be used.
+  min_base_quality: 0 # int(13): Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality.
+  absolutely_all_positions: false # bool(false): If true, mpileup outputs absolutely all positions, including unused reference sequences.
+  min_base_quality_threshold: 20 # int(20): Minimum quality score threshold to count base in ivar variants.
+  min_frequency_threshold: 0.03 # float(0.03): Minimum frequency threshold to call variants.
+  min_read_depth: 10 # int(0): Minimum read depth to call variants.
+  do_postfilter: true # bool: Whether to do postfiltering or not.
+  postfilter:
+    min_alt_depth: 2 # int: Mixed positions must have at least this ALT_DP value to be counted.
+    min_alt_freq: 0.1 # float: Mixed positions must have at least this ALT_FREQ value to be counted.
+    max_alt_freq: 0.9 # float: Mixed positions cannot have ALT_FREQ equal or greater than this value.
+    min_total_depth: 10 # int: Mixed positions must have at least this TOTAL_DP value to be counted.
 
-  do_postfilter: True # Whether to postfilter variants.
-  postfilter: # Uses bcftools norm, annotate and filter.
-    multiallelic: "+any" # OPT - Split (-) or join (+) biallelic sites into multiallelic records. Define snps | indels | any | both.
-    multi_overlaps: null # OPT - Allowed: "missing", "reference". Use the reference (0) or missing (.) allele for overlapping alleles after splitting multiallelic sites.
-    atomize: False # Whether to split MNVs into consecutive SNVs.
-    atom_overlaps: "star" # OPT - Allowed: "missing", "star". Alleles missing because of an overlapping variant can be set either to missing (.) or to star (*) as recommended by VCF spec.
-    snp_gap: 3 # Filter SNPs within INT base pairs of an indel or other other variant type.
-    indel_gap: 10 # Filter clusters of indels separated by INT or fewer base pairs allowing only one to pass.
-    set_gts_for_failed: "missing" # OPT - Allowed: "missing", "reference". Set genotypes of failed samples to missing value (.) or reference allele (0).
-    include: "" # Filter which sites to include.
-    exclude: "" # Filter which sites to exclude.
-    trim_alt_alleles: True # Remove alleles not seen in the genotype fields from the ALT column.
+variants__mutect2: # Relevant only if mutect2 is specified in variants->callers.
+  base_quality_score_threshold: 18 # int(18): Base qualities below this threshold will be reduced to the minimum (6).
+  callable_depth: 10 # int(10): Minimum depth to be considered callable for Mutect stats. Does not affect genotyping.
+  f1r2_max_depth: 200 # int(200): Sites with depth higher than this value will be grouped.
+  f1r2_median_mq: 50 # int(50): Skip sites with median mapping quality below this value.
+  f1r2_min_bq: 20 # int(20): Exclude bases below this quality from pileup.
+  min_base_quality_score: 10 # int(10): Minimum base quality score for a base to be considered.
+  max_reads_per_alignment_start: 50 # int(50): Maximum number of reads to retain per alignment start position. Reads above this threshold will be downsampled. Set to 0 to disable.
+  do_postfilter: true # bool: Whether to do postfiltering or not. Default: False.
+  postfilter:
+    microbial_mode: true # bool(false): Set filters to microbial defaults.
+    min_median_base_quality: 20 # int(20): Minimum median base quality of alt reads.
+    min_median_mapping_quality: -1 # int(-1): Minimum median mapping quality of alt reads.
+    min_median_read_position: 1 # int(1): Minimum median distance of variants from the end of reads.
+    min_reads_per_strand: 0 # int(0): Minimum alt reads required on both forward and reverse strands.
+    min_slippage_length: 8 # int(8): Minimum number of reference bases in an STR to suspect polymerase slippage.
+    pcr_slippage_rate: 0.1 # float(0.1): The frequency of polymerase slippage in contexts where it is suspected.
 
-consensus__ivar:
-  count_orphans: false # Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
-  max_read_depth: 1000 # limits the number of reads to load in memory per input file.
-  min_base_quality: 13 # minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality.
-  min_mapping_quality: 20 # minimum mapping quality for an alignment to be used.
-  consensus_base_quality_threshold: 20 # Minimum quality score threshold to count base.
-  consensus_frequency_threshold: 0.5 # Minimum frequency threshold to call consensus.
-  min_consensus_depth: 10 # Minimum depth to call consensus.
+consensus__ivar: # Relevant only if ivar is specified in consensus->callers.
+  count_orphans: true # bool(false): Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
+  max_read_depth: 0 # int(8000): This limits the number of reads to load in memory per input file. Decreases needed memory but increases running time. Zero sets it to the highest possible value.
+  redo_base_alignment_quality: false # bool(true): If true, samtools recalculates BAQ on the fly, ignore existing BQ tags.
+  min_mapping_quality: 20 # int(0): Minimum mapping quality for an alignment to be used.
+  min_base_quality: 0 # int(13): Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality.
+  absolutely_all_positions: false # bool(false): If true, mpileup outputs absolutely all positions, including unused reference sequences.
+  consensus_base_quality_threshold: 20 # int(20): Minimum quality score threshold to count base in ivar consensus.
+  consensus_frequency_threshold: 0 # float(0): Minimum frequency threshold to call consensus.
+  insertion_frequency_threshold: 0.8 # float(0.8): Minimum insertion frequency threshold(0 - 1) to call consensus.
+  min_consensus_depth: 10 # int(10): Minimum depth to call consensus.
 
 ### RESOURCES #############################
 
-max_threads: 8
-max_mem_mb: 16384
+max_threads: 2
+max_mem_mb: 6192
 
 resources:
   reads__trimming_mem_mb: 4096
@@ -141,6 +187,7 @@ resources:
   mapping__deduplication_mem_mb: 4096
   mapping__qualimap_mem_mb: 4096
   variants__freebayes_mem_mb: 4096
+  variants__mutect2_mem_mb: 4096
 
 threads:
   reads__trimming: 4
@@ -151,7 +198,8 @@ threads:
   mapping__indexing: 2
   variants__bcftools: 2
   variants__freebayes: 4
+  variants__mutect2: 4
 
 module_versions:
-  reads: "v3.2.1"
-  mapping: "v2.1.0"
+  reads: "v3.3.0" # str(v3.3.0): Version of reads module.
+  mapping: "v2.2.0" # str(v2.2.0): Version of mapping module.

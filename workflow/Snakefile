@@ -32,3 +32,10 @@ rule all:
         **get_outputs(),
     default_target: True
     localrule: True
+
+
+# onstart:
+#     path = os.path.abspath(".parameters_parsed.txt")
+#     logger.info(f"Dumping converted parameters from config into {path}")
+#     with open(path, "w") as f:
+#         f.write(get_all_relevant_extra_params())

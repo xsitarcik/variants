@@ -11,7 +11,7 @@ rule ivar__create_consensus:
             },
         ),
     params:
-        samtools_params=parse_samtools_params_for_consensus(),
+        samtools_params=parse_samtools_mpileup_for_ivar("consensus"),
         ivar_params=parse_ivar_params_for_consensus(),
     log:
         "logs/ivar/create_consensus/{reference}/{sample}.log",
