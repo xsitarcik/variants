@@ -232,19 +232,19 @@ def parse_ivar_params_for_consensus():
 
 
 def parse_freebayes_params():
-    extra = []
-
-    if val := config["variants__freebayes"]["min_base_quality"]:
-        extra.append(f"--min-base-quality {val}")
-
-    if val := config["variants__freebayes"]["min_mapping_quality"]:
-        extra.append(f"--min-mapping-quality {val}")
-
-    if val := config["variants__freebayes"]["mismatch_base_quality_threshold"]:
-        extra.append(f"--mismatch-base-quality-threshold {val}")
-
-    if val := config["variants__freebayes"]["read_max_mismatch_fraction"]:
-        extra.append(f"--read-max-mismatch-fraction {val}")
+    extra = [
+        "--min-base-quality {val}".format(val=config["variants__freebayes"]["min_base_quality"]),
+        "--min-mapping-quality {val}".format(val=config["variants__freebayes"]["min_mapping_quality"]),
+        "--mismatch-base-quality-threshold {val}".format(
+            val=config["variants__freebayes"]["mismatch_base_quality_threshold"]
+        ),
+        "--read-max-mismatch-fraction {val}".format(val=config["variants__freebayes"]["read_max_mismatch_fraction"]),
+        "--indel-exclusion-window {val}".format(val=config["variants__freebayes"]["indel_exclusion_window"]),
+        "--min-alternate-fraction {val}".format(val=config["variants__freebayes"]["min_alternate_fraction"]),
+        "--min-alternate-count {val}".format(val=config["variants__freebayes"]["min_alternate_count"]),
+        "--min-coverage {val}".format(val=config["variants__freebayes"]["min_coverage"]),
+        "--ploidy {val}".format(val=config["variants__freebayes"]["ploidy"]),
+    ]
 
     if (val := config["variants__freebayes"]["read_mismatch_limit"]) is not None:
         extra.append(f"--read-mismatch-limit {val}")
@@ -255,26 +255,11 @@ def parse_freebayes_params():
     if (val := config["variants__freebayes"]["read_snp_limit"]) is not None:
         extra.append(f"--read-snp-limit {val}")
 
-    if val := config["variants__freebayes"]["indel_exclusion_window"]:
-        extra.append(f"--indel-exclusion-window {val}")
-
-    if val := config["variants__freebayes"]["min_alternate_fraction"]:
-        extra.append(f"--min-alternate-fraction {val}")
-
-    if val := config["variants__freebayes"]["min_alternate_count"]:
-        extra.append(f"--min-alternate-count {val}")
-
-    if val := config["variants__freebayes"]["min_coverage"]:
-        extra.append(f"--min-coverage {val}")
-
     if (val := config["variants__freebayes"]["limit_coverage"]) is not None:
         extra.append(f"--limit-coverage {val}")
 
     if (val := config["variants__freebayes"]["skip_coverage"]) is not None:
         extra.append(f"--skip-coverage {val}")
-
-    if val := config["variants__freebayes"]["ploidy"]:
-        extra.append(f"--ploidy {val}")
 
     if config["variants__freebayes"]["gvcf"]:
         extra.append("--gvcf")
