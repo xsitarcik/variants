@@ -35,18 +35,20 @@ rule freebayes__fill_tags:
     input:
         "results/variants/{reference}/{sample}/freebayes_annot.vcf",
     output:
-        temp("results/variants/{reference}/{sample}/freebayes_filled.vcf"),
+        temp("results/variants/{reference}/{sample}/freebayes_filltags.vcf"),
     log:
         "logs/variants_freebayes/fill_tags/{reference}/{sample}.log",
+    params:
+        tags=parse_tags_for_bcftools_fill_tags("freebayes"),
     conda:
         "../../envs/bcftools.yaml"
     shell:
-        "bcftools plugin fill-tags {input} -O v -o {output} -- --tags 'AF,AC,AN' 1> {log} 2>&1"
+        "bcftools plugin fill-tags {input} -O v -o {output} -- {params.tags} 1> {log} 2>&1"
 
 
 rule freebayes__filter_vcf:
     input:
-        "results/variants/{reference}/{sample}/freebayes_filled.vcf",
+        "results/variants/{reference}/{sample}/freebayes_filltags.vcf",
     output:
         temp("results/variants/{reference}/{sample}/freebayes_filtered.bcf"),
     params:
