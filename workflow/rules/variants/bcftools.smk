@@ -90,7 +90,7 @@ rule bcftools__fill_tags:
     conda:
         "../../envs/bcftools.yaml"
     shell:
-        "bcftools plugin fill-tags {input} -O v -o {output} -- {params.tags:q} 1> {log} 2>&1"
+        "bcftools plugin fill-tags {input} -O v -o {output} -- {params.tags} 1> {log} 2>&1"
 
 
 rule bcftools__filter_vcf:
