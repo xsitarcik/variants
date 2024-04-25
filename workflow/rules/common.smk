@@ -30,6 +30,10 @@ def get_reference_dir_for_name(reference: str):
     return mapping_workflow.get_reference_dir_for_name(reference)
 
 
+def get_multiqc_inputs_for_mapping():
+    return mapping_workflow.get_multiqc_inputs()
+
+
 ### Data input handling independent of wildcards ######################################################################
 
 
@@ -73,6 +77,23 @@ def get_outputs():
     if not outputs:
         raise ValueError("No outputs defined for variant calling or consensus calling.")
     return outputs
+
+
+def get_standalone_outputs():
+    # outputs that will be produced if the module is run as a standalone workflow, not as a part of a larger workflow
+    return {
+        "multiqc_report": "results/_aggregation/multiqc.html",
+    }
+
+
+def get_final_vcf_files():
+    tool_steps = []
+    for v in config["variants"]["callers"]:
+        if config[f"variants__{v}"]["do_postfilter"]:
+            tool_steps.append(f"{v}_filtered")
+        else:
+            tool_steps.append(f"{v}_all")
+    return expand("results/variants/{{reference}}/{{sample}}/{tool_step}.vcf", tool_step=tool_steps)
 
 
 def infer_reference_dict(wildcards):
@@ -330,6 +351,21 @@ def get_all_relevant_extra_params():
         extra += f"\tsamtools mpileup: {parse_samtools_mpileup_for_ivar('consensus')}\n"
         extra += f"\tIVAR consensus: {parse_ivar_params_for_consensus()}\n"
     return extra
+
+
+### Contract for other workflows ######################################################################################
+
+
+def get_multiqc_inputs():
+    outs = get_multiqc_inputs_for_mapping()
+
+    if config["variants"]["callers"]:
+        outs["variants_stats"] = expand(
+            "results/variants/{reference}/{sample}/stats.txt",
+            reference=get_reference_names(),
+            sample=get_sample_names(),
+        )
+    return outs
 
 
 ### Resource handling #################################################################################################

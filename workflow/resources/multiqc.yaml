@@ -1,0 +1,6 @@
+fn_clean_exts:
+  - ".kreport2"
+  - ".bam"
+  - "_R1.fastq.gz"
+  - "_R2.fastq.gz"
+  - ".samtools_stats"

@@ -7,7 +7,8 @@ reads: # Specify the order and methods for each read processing step. If no meth
 
 mapping:
   mapping: "bwa" # enum(bwa): Mapping tool to use. Allowed: 'bwa'.
-  reference_fasta_paths: ["example.fa"] # list of min 1 str(['example.fa']): References to map against. Provide paths to the reference fasta files.
+  reference_fasta_paths:
+    - "/data/projects/uvz_meningitidis/reference/neisseria_meningitidis/neisseria_meningitidis.fa"
   deduplication: "picard" # null/enum: Deduplication method to use. Allowed: 'picard'.
   _generate_qualimap: ["deduplication"] # list of enum([]): Steps to generate qualimap for. Allowed: 'mapping','deduplication'.
 
@@ -198,5 +199,5 @@ threads:
   variants__mutect2: 4 # int: Number of threads to use for mutect2 variants.
 
 module_versions:
-  reads: "v3.3.0" # str(v3.3.0): Version of reads module.
-  mapping: "v2.2.0" # str(v2.2.0): Version of mapping module.
+  reads: "v3.4.0" # str(v3.4.0): Version of reads module.
+  mapping: "v2.3.0" # str(v2.3.0): Version of mapping module.
