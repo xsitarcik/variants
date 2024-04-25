@@ -48,17 +48,17 @@ def get_outputs():
     for tool in config["variants"]["callers"]:
         step = "filtered" if config[f"variants__{tool}"]["do_postfilter"] else "all"
         outputs[f"variants_{tool}"] = expand(
-            f"results/variants/{{reference}}/{{sample}}/{tool}_{step}.vcf", sample=sample_names, reference=references
+            f"results/variants/{{reference}}/{tool}/{{sample}}_{step}.vcf", sample=sample_names, reference=references
         )
         outputs[f"stats_{tool}"] = expand(
-            f"results/variants/{{reference}}/{{sample}}/stats/{tool}_{step}.txt",
+            f"results/variants/{{reference}}/{tool}/stats/{{sample}}_{step}.txt",
             sample=sample_names,
             reference=references,
         )
 
-    if "ivar" in config["consensus"]["callers"]:
-        outputs["consensus_ivar"] = expand(
-            "results/consensus/ivar/{reference}/{sample}.fa", sample=sample_names, reference=references
+    for tool in config["consensus"]["callers"]:
+        outputs[f"consensus_{tool}"] = expand(
+            f"results/consensus/{{reference}}/{tool}/{{sample}}.fa", sample=sample_names, reference=references
         )
 
     if not outputs:

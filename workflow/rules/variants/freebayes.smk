@@ -5,7 +5,7 @@ rule freebayes__call_vcf:
         ref=infer_reference_fasta,
         index=infer_reference_faidx,
     output:
-        vcf="results/variants/{reference}/{sample}/freebayes_all.vcf",
+        vcf="results/variants/{reference}/freebayes/{sample}_all.vcf",
     log:
         "logs/variants_freebayes/call_vcf/{reference}/{sample}.log",
     params:
@@ -20,9 +20,9 @@ rule freebayes__call_vcf:
 
 rule freebayes__annotate_vcf:
     input:
-        "results/variants/{reference}/{sample}/freebayes_all.vcf",
+        "results/variants/{reference}/freebayes/{sample}_all.vcf",
     output:
-        temp("results/variants/{reference}/{sample}/freebayes_annot.vcf"),
+        temp("results/variants/{reference}/freebayes/{sample}_annot.vcf"),
     log:
         "logs/variants_freebayes/annotate_vcf/{reference}/{sample}.log",
     conda:
@@ -33,9 +33,9 @@ rule freebayes__annotate_vcf:
 
 rule freebayes__fill_tags:
     input:
-        "results/variants/{reference}/{sample}/freebayes_annot.vcf",
+        "results/variants/{reference}/freebayes/{sample}_annot.vcf",
     output:
-        temp("results/variants/{reference}/{sample}/freebayes_filltags.vcf"),
+        temp("results/variants/{reference}/freebayes/{sample}_filltags.vcf"),
     log:
         "logs/variants_freebayes/fill_tags/{reference}/{sample}.log",
     params:
@@ -48,9 +48,9 @@ rule freebayes__fill_tags:
 
 rule freebayes__filter_vcf:
     input:
-        "results/variants/{reference}/{sample}/freebayes_filltags.vcf",
+        "results/variants/{reference}/freebayes/{sample}_filltags.vcf",
     output:
-        temp("results/variants/{reference}/{sample}/freebayes_filtered.bcf"),
+        temp("results/variants/{reference}/freebayes/{sample}_filtered.bcf"),
     params:
         extra=get_bcftools_filter_params("freebayes"),
     log:
@@ -62,10 +62,10 @@ rule freebayes__filter_vcf:
 
 rule freebayes__view_filtered:
     input:
-        "results/variants/{reference}/{sample}/freebayes_filtered.bcf",
+        "results/variants/{reference}/freebayes/{sample}_filtered.bcf",
     output:
         report(
-            "results/variants/{reference}/{sample}/freebayes_filtered.vcf",
+            "results/variants/{reference}/freebayes/{sample}_filtered.vcf",
             category="{sample} - {reference}",
             labels={
                 "Type": "Variants - freebayes/filtered",
