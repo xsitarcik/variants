@@ -4,7 +4,6 @@ min_version("7.25.0")
 
 
 include: "rules/common.smk"
-include: "rules/stats.smk"
 
 
 module mapping_workflow:
@@ -31,6 +30,10 @@ for method in config["consensus"]["callers"]:
 if not config.get("module_versions") or "variants" not in config["module_versions"]:
 
     include: "rules/standalone.smk"
+
+
+include: "rules/stats.smk"
+include: "rules/summary.smk"
 
 
 rule all:

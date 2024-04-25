@@ -63,6 +63,8 @@ def get_outputs():
 
     if not outputs:
         raise ValueError("No outputs defined for variant calling or consensus calling.")
+
+    outputs["concat_consensus"] = expand("results/_aggregation/consensus/{reference}.fa", reference=references)
     return outputs
 
 
