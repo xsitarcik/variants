@@ -4,7 +4,7 @@ rule ivar__get_variants:
         bai=infer_bai_for_sample_and_ref,
         ref=infer_reference_fasta,
     output:
-        tsv=temp("results/variants/{reference}/ivar/{sample}_all.tsv"),
+        tsv=temp("results/variants/{reference}/{sample}/ivar_all.tsv"),
     params:
         samtools_params=parse_samtools_mpileup_for_ivar("variants"),
         ivar_params=parse_ivar_params_for_variants(),
@@ -16,10 +16,10 @@ rule ivar__get_variants:
 
 rule ivar__tsv_to_vcf:
     input:
-        "results/variants/{reference}/ivar/{sample}_{step}.tsv",
+        "results/variants/{reference}/{sample}/ivar_{step}.tsv",
     output:
-        all="results/variants/{reference}/ivar/{sample}_{step}.vcf",
-        filtered="results/variants/{reference}/ivar/{sample}_{step}_passed_only.vcf",
+        all="results/variants/{reference}/{sample}/ivar_{step}.vcf",
+        filtered="results/variants/{reference}/{sample}/ivar_{step}_passed_only.vcf",
     log:
         "logs/variants_ivar/tsv_to_vcf_{step}/{reference}/{sample}.log",
     wrapper:
@@ -28,10 +28,10 @@ rule ivar__tsv_to_vcf:
 
 rule ivar__filter_variants:
     input:
-        "results/variants/{reference}/ivar/{sample}_all.tsv",
+        "results/variants/{reference}/{sample}/ivar_all.tsv",
     output:
-        mixed_positions="results/variants/{reference}/ivar/{sample}_filtered.tsv",
-        readcount=temp("results/variants/{reference}/ivar/{sample}_filtered.count"),
+        mixed_positions="results/variants/{reference}/{sample}/ivar_filtered.tsv",
+        readcount=temp("results/variants/{reference}/{sample}/ivar_filtered.count"),
     params:
         alt_depth=config["variants__ivar"]["postfilter"]["min_alt_depth"],
         min_alt_freq=config["variants__ivar"]["postfilter"]["min_alt_freq"],
@@ -45,10 +45,10 @@ rule ivar__filter_variants:
 
 rule ivar__convert_to_html:
     input:
-        "results/variants/{reference}/ivar/{sample}_{step}.tsv",
+        "results/variants/{reference}/{sample}/ivar_{step}.tsv",
     output:
         report(
-            "results/variants/{reference}/ivar/{sample}_{step}.html",
+            "results/variants/{reference}/{sample}/ivar_{step}.html",
             category="{sample} - {reference}",
             labels={
                 "Type": "Variants - Ivar - {step}",
