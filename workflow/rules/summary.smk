@@ -12,7 +12,7 @@ rule concat__consensuses:
     log:
         "logs/concat/consensuses_for_references/{reference}.log",
     conda:
-        "../envs/coreutils.yaml"
+        "../envs/awk_sed.yaml"
     localrule: True
     shell:
         "cat {input} 1> {output} 2> {log}"
