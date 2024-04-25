@@ -21,7 +21,7 @@ rule multiqc__report_variants:
         "results/_aggregation/multiqc_variants.html",
     params:
         use_input_files_only=True,
-        extra=f"-d -dd 1",
+        extra=f"-d -dd 2",
     log:
         "logs/multiqc/variants.log",
     wrapper:
