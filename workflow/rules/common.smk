@@ -45,28 +45,15 @@ def get_outputs():
     references = get_reference_names()
 
     outputs = {}
-    if "bcftools" in config["variants"]["callers"]:
-        step = "filtered" if config["variants__bcftools"]["do_postfilter"] else "all"
-        outputs["variants_bcftools"] = expand(
-            f"results/variants/{{reference}}/{{sample}}/bcftools_{step}.vcf", sample=sample_names, reference=references
+    for tool in config["variants"]["callers"]:
+        step = "filtered" if config[f"variants__{tool}"]["do_postfilter"] else "all"
+        outputs[f"variants_{tool}"] = expand(
+            f"results/variants/{{reference}}/{{sample}}/{tool}_{step}.vcf", sample=sample_names, reference=references
         )
-    if "ivar" in config["variants"]["callers"]:
-        step = "filtered" if config["variants__ivar"]["do_postfilter"] else "all"
-        outputs["variants_ivar"] = expand(
-            f"results/variants/{{reference}}/{{sample}}/ivar_{step}.{{ext}}",
+        outputs[f"stats_{tool}"] = expand(
+            f"results/variants/{{reference}}/{{sample}}/stats/{tool}_{step}.txt",
             sample=sample_names,
             reference=references,
-            ext=["html", "vcf"],
-        )
-    if "freebayes" in config["variants"]["callers"]:
-        step = "filtered" if config["variants__freebayes"]["do_postfilter"] else "all"
-        outputs["variants_freebayes"] = expand(
-            f"results/variants/{{reference}}/{{sample}}/freebayes_{step}.vcf", sample=sample_names, reference=references
-        )
-    if "mutect2" in config["variants"]["callers"]:
-        step = "filtered" if config["variants__mutect2"]["do_postfilter"] else "all"
-        outputs["variants_mutect2"] = expand(
-            f"results/variants/{{reference}}/{{sample}}/mutect2_{step}.vcf", sample=sample_names, reference=references
         )
 
     if "ivar" in config["consensus"]["callers"]:
@@ -84,16 +71,6 @@ def get_standalone_outputs():
     return {
         "multiqc_report": "results/_aggregation/multiqc.html",
     }
-
-
-def get_final_vcf_files():
-    tool_steps = []
-    for v in config["variants"]["callers"]:
-        if config[f"variants__{v}"]["do_postfilter"]:
-            tool_steps.append(f"{v}_filtered")
-        else:
-            tool_steps.append(f"{v}_all")
-    return expand("results/variants/{{reference}}/{{sample}}/{tool_step}.vcf", tool_step=tool_steps)
 
 
 def infer_reference_dict(wildcards):
@@ -359,12 +336,9 @@ def get_all_relevant_extra_params():
 def get_multiqc_inputs():
     outs = get_multiqc_inputs_for_mapping()
 
-    if config["variants"]["callers"]:
-        outs["variants_stats"] = expand(
-            "results/variants/{reference}/{sample}/stats.txt",
-            reference=get_reference_names(),
-            sample=get_sample_names(),
-        )
+    for k, v in get_outputs().items():
+        if k.startswith("stats_"):
+            outs[k] = v
     return outs
 
 

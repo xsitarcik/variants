@@ -1,20 +1,20 @@
 rule bcftools__stats:
     input:
-        vcfs=get_final_vcf_files(),
+        vcf="results/variants/{reference}/{sample}/{tool}_{step}.vcf",
         ref=infer_reference_fasta,
     output:
         report(
-            "results/variants/{reference}/{sample}/stats.txt",
+            "results/variants/{reference}/{sample}/stats/{tool}_{step}.txt",
             category="{sample} - {reference}",
             labels={
-                "Type": "Variants statistics for final step",
+                "Type": "{tool} - {step}",
             },
         ),
     log:
-        "logs/variants_stats/{reference}/{sample}.log",
+        "logs/variants_stats/{reference}/{sample}/{tool}_{step}.log",
     params:
         extra="",
     conda:
-        "../../envs/bcftools.yaml"
+        "../envs/bcftools.yaml"
     shell:
-        "bcftools stats --fasta-ref {input.ref} {input.vcfs} > {output} 2> {log}"
+        "bcftools stats --fasta-ref {input.ref} {input.vcf} > {output} 2> {log}"
