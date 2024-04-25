@@ -4,10 +4,10 @@ rule ivar__create_consensus:
         bai=infer_bai_for_sample_and_ref,
     output:
         consensus=report(
-            "results/consensus/ivar/{reference}/{sample}.fa",
+            "results/consensus/{reference}/{sample}/ivar.fa",
             category="{sample} - {reference}",
             labels={
-                "Type": "Consensus",
+                "Type": "Ivar Consensus",
             },
         ),
     params:

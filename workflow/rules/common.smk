@@ -30,6 +30,10 @@ def get_reference_dir_for_name(reference: str):
     return mapping_workflow.get_reference_dir_for_name(reference)
 
 
+def get_multiqc_inputs_for_mapping():
+    return mapping_workflow.get_multiqc_inputs()
+
+
 ### Data input handling independent of wildcards ######################################################################
 
 
@@ -41,38 +45,33 @@ def get_outputs():
     references = get_reference_names()
 
     outputs = {}
-    if "bcftools" in config["variants"]["callers"]:
-        step = "filtered" if config["variants__bcftools"]["do_postfilter"] else "all"
-        outputs["variants_bcftools"] = expand(
-            f"results/variants/{{reference}}/{{sample}}/bcftools_{step}.vcf", sample=sample_names, reference=references
+    for tool in config["variants"]["callers"]:
+        step = "filtered" if config[f"variants__{tool}"]["do_postfilter"] else "all"
+        outputs[f"variants_{tool}"] = expand(
+            f"results/variants/{{reference}}/{{sample}}/{tool}_{step}.vcf", sample=sample_names, reference=references
         )
-    if "ivar" in config["variants"]["callers"]:
-        step = "filtered" if config["variants__ivar"]["do_postfilter"] else "all"
-        outputs["variants_ivar"] = expand(
-            f"results/variants/{{reference}}/{{sample}}/ivar_{step}.{{ext}}",
+        outputs[f"stats_{tool}"] = expand(
+            f"results/variants/{{reference}}/{{sample}}/stats/{tool}_{step}.txt",
             sample=sample_names,
             reference=references,
-            ext=["html", "vcf"],
-        )
-    if "freebayes" in config["variants"]["callers"]:
-        step = "filtered" if config["variants__freebayes"]["do_postfilter"] else "all"
-        outputs["variants_freebayes"] = expand(
-            f"results/variants/{{reference}}/{{sample}}/freebayes_{step}.vcf", sample=sample_names, reference=references
-        )
-    if "mutect2" in config["variants"]["callers"]:
-        step = "filtered" if config["variants__mutect2"]["do_postfilter"] else "all"
-        outputs["variants_mutect2"] = expand(
-            f"results/variants/{{reference}}/{{sample}}/mutect2_{step}.vcf", sample=sample_names, reference=references
         )
 
-    if "ivar" in config["consensus"]["callers"]:
-        outputs["consensus_ivar"] = expand(
-            "results/consensus/ivar/{reference}/{sample}.fa", sample=sample_names, reference=references
+    for tool in config["consensus"]["callers"]:
+        outputs[f"consensus_{tool}"] = expand(
+            f"results/consensus/{{reference}}/{{sample}}/{tool}.fa", sample=sample_names, reference=references
         )
 
     if not outputs:
         raise ValueError("No outputs defined for variant calling or consensus calling.")
     return outputs
+
+
+def get_standalone_outputs():
+    # outputs that will be produced if the module is run as a standalone workflow, not as a part of a larger workflow
+    return {
+        "multiqc_report": "results/_aggregation/multiqc.html",
+        "multiqc_variants": "results/_aggregation/multiqc_variants.html",
+    }
 
 
 def infer_reference_dict(wildcards):
@@ -330,6 +329,22 @@ def get_all_relevant_extra_params():
         extra += f"\tsamtools mpileup: {parse_samtools_mpileup_for_ivar('consensus')}\n"
         extra += f"\tIVAR consensus: {parse_ivar_params_for_consensus()}\n"
     return extra
+
+
+### Contract for other workflows ######################################################################################
+
+
+def get_multiqc_inputs_no_variants():
+    return get_multiqc_inputs_for_mapping()
+
+
+def get_multiqc_inputs_variants():
+    outs = {}
+
+    for k, v in get_outputs().items():
+        if k.startswith("stats_"):
+            outs[k] = v
+    return outs
 
 
 ### Resource handling #################################################################################################

@@ -4,6 +4,7 @@ min_version("7.25.0")
 
 
 include: "rules/common.smk"
+include: "rules/stats.smk"
 
 
 module mapping_workflow:
@@ -26,16 +27,21 @@ for method in config["consensus"]["callers"]:
     include: f"rules/consensus/{method}.smk"
 
 
+# Only include standalone rules if the module is used standalone, i.e. not as a part of a larger workflow
+if not config.get("module_versions") or "variants" not in config["module_versions"]:
+
+    include: "rules/standalone.smk"
+
+
 rule all:
     input:
         **mapping_workflow.get_outputs(),
         **get_outputs(),
+        **get_standalone_outputs(),
     default_target: True
     localrule: True
 
 
-# onstart:
-#     path = os.path.abspath(".parameters_parsed.txt")
-#     logger.info(f"Dumping converted parameters from config into {path}")
-#     with open(path, "w") as f:
-#         f.write(get_all_relevant_extra_params())
+if extra := get_all_relevant_extra_params():
+    logger.info("Variants module - extra parameters parsed from config:")
+    logger.info(get_all_relevant_extra_params())

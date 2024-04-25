@@ -1,0 +1,14 @@
+fn_clean_exts:
+  - ".kreport2"
+  - ".bam"
+  - "_R1.fastq.gz"
+  - "_R2.fastq.gz"
+  - ".samtools_stats"
+  - ".txt"
+  - ".vcf"
+
+prepend_dirs_sep: "/"
+
+extra_fn_clean_exts:
+  - type: remove
+    pattern: stats/

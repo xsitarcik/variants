@@ -801,12 +801,12 @@ definitions:
     properties:
       reads:
         type: string
-        default: "v3.3.0"
+        default: "v3.4.0"
         pattern: "v[0-9]+.[0-9]+.[0-9]+"
         description: "Version of reads module"
       mapping:
         type: string
-        default: "v2.2.0"
+        default: "v2.3.1"
         pattern: "v[0-9]+.[0-9]+.[0-9]+"
         description: "Version of mapping module"
     title: ModuleVersions
