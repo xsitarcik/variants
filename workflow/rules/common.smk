@@ -70,6 +70,7 @@ def get_standalone_outputs():
     # outputs that will be produced if the module is run as a standalone workflow, not as a part of a larger workflow
     return {
         "multiqc_report": "results/_aggregation/multiqc.html",
+        "multiqc_variants": "results/_aggregation/multiqc_variants.html",
     }
 
 
@@ -333,8 +334,12 @@ def get_all_relevant_extra_params():
 ### Contract for other workflows ######################################################################################
 
 
-def get_multiqc_inputs():
-    outs = get_multiqc_inputs_for_mapping()
+def get_multiqc_inputs_no_variants():
+    return get_multiqc_inputs_for_mapping()
+
+
+def get_multiqc_inputs_variants():
+    outs = {}
 
     for k, v in get_outputs().items():
         if k.startswith("stats_"):

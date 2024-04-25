@@ -4,3 +4,5 @@ fn_clean_exts:
   - "_R1.fastq.gz"
   - "_R2.fastq.gz"
   - ".samtools_stats"
+  - ".txt"
+  - ".vcf"
