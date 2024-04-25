@@ -11,4 +11,4 @@ prepend_dirs_sep: "/"
 
 extra_fn_clean_exts:
   - type: remove
-    pattern: stats
+    pattern: stats/
