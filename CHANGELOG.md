@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.1.0](https://github.com/xsitarcik/variants/compare/v2.0.0...v2.1.0) (2024-04-25)
+
+
+### Features
+
+* added bcftools stats and multiqc ([2251be9](https://github.com/xsitarcik/variants/commit/2251be9f43ac906f58ba9f92fef0550ac2887ec0))
+
+
+### Bug Fixes
+
+* refactored outputs to be variants/tool/sample ([1e70932](https://github.com/xsitarcik/variants/commit/1e709329f73ec8985f9fc10b08ac2fe0033c7a9f))
+* reverted back to sample/tool outputs ([a6d4c73](https://github.com/xsitarcik/variants/commit/a6d4c73b723a5e8636236865fc6a63052675f614))
+* split multiqc for variants ([005519f](https://github.com/xsitarcik/variants/commit/005519f8b93baba5d66813cfd50de95631b48eba))
+
+
+### Performance Improvements
+
+* bumped mapping module ([47f7256](https://github.com/xsitarcik/variants/commit/47f7256f5cdb26f5300d252aa9037d8ec2f6f083))
+
 ## [2.0.0](https://github.com/xsitarcik/variants/compare/v1.3.0...v2.0.0) (2024-04-23)
 
 
