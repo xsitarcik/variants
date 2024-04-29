@@ -41,6 +41,6 @@ rule concat__consensus_from_segments:
         "logs/concat/consensus_from_segments/{sample}/{reference}_{tool}.log",
     localrule: True
     conda:
-        "../envs/awk_sed.yaml"
+        "../../envs/awk_sed.yaml"
     shell:
         "cat {input.consensuses} 1> {output} 2> {log}"
