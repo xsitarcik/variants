@@ -1,19 +1,46 @@
-rule ivar__create_consensus:
+checkpoint samtools__index_reference:
+    input:
+        reference=infer_reference_fasta,
+    output:
+        "results/consensus/{reference}/segments.fai",
+    log:
+        "logs/samtools/index_reference/{reference}.log",
+    wrapper:
+        "v3.9.0/bio/samtools/faidx"
+
+
+rule ivar__consensus_per_segment:
     input:
         bam=infer_bam_for_sample_and_ref,
         bai=infer_bai_for_sample_and_ref,
     output:
-        consensus=report(
-            "results/consensus/{reference}/{sample}/ivar.fa",
-            category="{sample} - {reference}",
-            labels={
-                "Type": "Ivar Consensus",
-            },
-        ),
+        consensus="results/consensus/{reference}/{sample}/segments/ivar_{segment}.fa",
+        qual=temp("results/consensus/{reference}/{sample}/segments/ivar_{segment}.qual.txt"),
     params:
-        samtools_params=parse_samtools_mpileup_for_ivar("consensus"),
+        name=lambda wildcards: f"{wildcards.sample}_{wildcards.segment}__ivar",
+        samtools_params=lambda wildcards: f"--region {wildcards.segment} {parse_samtools_mpileup_for_ivar('consensus')}",
         ivar_params=parse_ivar_params_for_consensus(),
     log:
-        "logs/ivar/create_consensus/{reference}/{sample}.log",
+        "logs/ivar/consensus_per_segment/{sample}/{reference}/{segment}.log",
     wrapper:
-        "https://github.com/xsitarcik/wrappers/raw/v1.12.7/wrappers/ivar/consensus"
+        "https://github.com/xsitarcik/wrappers/raw/v1.12.2/wrappers/ivar/consensus"
+
+
+rule concat__consensus_from_segments:
+    input:
+        consensuses=infer_segment_consensuses,
+    output:
+        report(
+            "results/consensus/{reference}/{sample}/{tool}.fa",
+            category="{sample} - {reference}",
+            labels={
+                "Type": "Consensus using {tool}",
+            },
+        ),
+    log:
+        "logs/concat/consensus_from_segments/{sample}/{reference}_{tool}.log",
+    localrule: True
+    conda:
+        "../envs/awk_sed.yaml"
+    shell:
+        "cat {input.consensuses} 1> {output} 2> {log}"

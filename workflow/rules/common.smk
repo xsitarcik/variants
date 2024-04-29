@@ -64,7 +64,9 @@ def get_outputs():
     if not outputs:
         raise ValueError("No outputs defined for variant calling or consensus calling.")
 
-    outputs["concat_consensus"] = expand("results/_aggregation/consensus/{reference}.fa", reference=references)
+    if config["consensus"]["callers"]:
+        outputs["concat_consensus"] = expand("results/_aggregation/consensus/{reference}.fa", reference=references)
+
     return outputs
 
 
@@ -86,6 +88,20 @@ def infer_reference_fasta(wildcards):
 
 def infer_reference_faidx(wildcards):
     return f"{get_reference_dir_for_name(wildcards.reference)}/{wildcards.reference}.fa.fai"
+
+
+def infer_segment_consensuses(wildcards):
+    with checkpoints.samtools__index_reference.get(reference=wildcards.reference).output[0].open() as f:
+        segments = [line.split()[0] for line in f.readlines()]
+    return expand("results/consensus/{{reference}}/{{sample}}/segments/{{tool}}_{segment}.fa", segment=segments)
+
+
+def infer_consensuses_for_reference(wildcards):
+    return expand(
+        "results/consensus/{{reference}}/{sample}/{tool}.fa",
+        sample=get_sample_names(),
+        tool=config["consensus"]["callers"],
+    )
 
 
 ### Parameter parsing from config #####################################################################################

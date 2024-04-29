@@ -1,12 +1,12 @@
-rule concat__consensuses:
+rule concat__consensuses_for_references:
     input:
-        expand("results/consensus/{{reference}}/{sample}/ivar.fa", sample=get_sample_names()),
+        consensuses=infer_consensuses_for_reference,
     output:
         report(
             "results/_aggregation/consensus/{reference}.fa",
             category="_aggregation",
             labels={
-                "Type": "Consensuses for {reference}",
+                "Type": "Consensus for {reference}",
             },
         ),
     log:
@@ -15,4 +15,4 @@ rule concat__consensuses:
         "../envs/awk_sed.yaml"
     localrule: True
     shell:
-        "cat {input} 1> {output} 2> {log}"
+        "cat {input.consensuses} 1> {output} 2> {log}"
