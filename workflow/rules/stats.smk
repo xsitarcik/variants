@@ -5,9 +5,10 @@ rule bcftools__stats:
     output:
         report(
             "results/variants/{reference}/{sample}/stats/{tool}_{step}.txt",
-            category="{sample} - {reference}",
+            category="Variant stats - {reference}",
             labels={
-                "Type": "{tool} - {step}",
+                "Sample": "{sample}",
+                "Type": "Stats for {tool} - {step}",
             },
         ),
     log:

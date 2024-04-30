@@ -5,6 +5,7 @@ checkpoint samtools__index_reference:
         "results/consensus/{reference}/segments.fai",
     log:
         "logs/samtools/index_reference/{reference}.log",
+    localrule: True
     wrapper:
         "v3.9.0/bio/samtools/faidx"
 
@@ -32,9 +33,10 @@ rule concat__consensus_from_segments:
     output:
         report(
             "results/consensus/{reference}/{sample}/{tool}.fa",
-            category="{sample} - {reference}",
+            category="Consensuses - {reference}",
             labels={
-                "Type": "Consensus using {tool}",
+                "Sample": "{sample}",
+                "Type": "{tool}",
             },
         ),
     log:

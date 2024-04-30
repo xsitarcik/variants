@@ -113,9 +113,10 @@ rule bcftools__view_filtered:
     output:
         report(
             "results/variants/{reference}/{sample}/bcftools_filtered.vcf",
-            category="{sample} - {reference}",
+            category="Variants - {reference}",
             labels={
-                "Type": "Variants - bcftools/filtered",
+                "Sample": "{sample}",
+                "Type": "BCFtools - filtered",
             },
         ),
     params:

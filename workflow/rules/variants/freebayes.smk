@@ -66,9 +66,10 @@ rule freebayes__view_filtered:
     output:
         report(
             "results/variants/{reference}/{sample}/freebayes_filtered.vcf",
-            category="{sample} - {reference}",
+            category="Variants - {reference}",
             labels={
-                "Type": "Variants - freebayes/filtered",
+                "Sample": "{sample}",
+                "Type": "Freebayes - filtered",
             },
         ),
     params:

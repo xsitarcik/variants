@@ -107,7 +107,14 @@ rule mutect2__filter_calls:
         bam_bai="results/variants/{reference}/{sample}/mutect2_fixed.bam.bai",
         f1r2="results/variants/{reference}/{sample}/mutect2_artifacts_prior.tar.gz",
     output:
-        vcf="results/variants/{reference}/{sample}/mutect2_filtered.vcf",
+        vcf=report(
+            "results/variants/{reference}/{sample}/mutect2_filtered.vcf",
+            category="Variants - {reference}",
+            labels={
+                "Sample": "{sample}",
+                "Type": "GATK mutect2 - filtered",
+            },
+        ),
         stats="results/variants/{reference}/{sample}/mutect2_filtered.vcf.filteringStats.tsv",
     threads: get_threads_for_mutect2()
     resources:

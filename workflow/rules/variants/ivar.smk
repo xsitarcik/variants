@@ -49,9 +49,10 @@ rule ivar__convert_to_html:
     output:
         report(
             "results/variants/{reference}/{sample}/ivar_{step}.html",
-            category="{sample} - {reference}",
+            category="Variants - {reference}",
             labels={
-                "Type": "Variants - Ivar - {step}",
+                "Sample": "{sample}",
+                "Type": "Ivar - {step}",
             },
         ),
     log:

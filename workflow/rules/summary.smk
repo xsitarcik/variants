@@ -4,7 +4,7 @@ rule concat__consensuses_for_references:
     output:
         report(
             "results/_aggregation/consensus/{reference}.fa",
-            category="_aggregation",
+            category="Summary",
             labels={
                 "Type": "Consensus for {reference}",
             },
