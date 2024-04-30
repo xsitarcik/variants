@@ -33,7 +33,7 @@ rule concat__consensus_from_segments:
     output:
         report(
             "results/consensus/{reference}/{sample}/{tool}.fa",
-            category="Consensuses - {reference}",
+            category="Consensus - {reference}",
             labels={
                 "Sample": "{sample}",
                 "Type": "{tool}",
