@@ -45,6 +45,7 @@ rule all:
     localrule: True
 
 
-if extra := get_all_relevant_extra_params():
-    logger.info("Variants module - extra parameters parsed from config:")
-    logger.info(get_all_relevant_extra_params())
+onstart:
+    if extra := get_all_relevant_extra_params():
+        logger.info("Variants module - extra parameters parsed from config:")
+        logger.info(get_all_relevant_extra_params())
