@@ -199,5 +199,5 @@ threads:
   variants__mutect2: 4 # int: Number of threads to use for mutect2 variants.
 
 module_versions:
-  reads: "v3.4.0" # str(v3.4.0): Version of reads module.
-  mapping: "v2.3.1" # str(v2.3.1): Version of mapping module.
+  reads: "v3.4.2" # str(v3.4.2): Version of reads module.
+  mapping: "v2.3.2" # str(v2.3.2): Version of mapping module.
