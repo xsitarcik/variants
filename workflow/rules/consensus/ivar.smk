@@ -24,7 +24,7 @@ rule ivar__consensus_per_segment:
     log:
         "logs/ivar/consensus_per_segment/{sample}/{reference}/{segment}.log",
     wrapper:
-        "https://github.com/xsitarcik/wrappers/raw/v1.12.2/wrappers/ivar/consensus"
+        "https://github.com/xsitarcik/wrappers/raw/v1.13.4/wrappers/ivar/consensus"
 
 
 rule concat__consensus_from_segments:

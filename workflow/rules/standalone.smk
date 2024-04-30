@@ -10,7 +10,7 @@ rule multiqc__report:
     log:
         "logs/multiqc/all.log",
     wrapper:
-        "v3.8.0/bio/multiqc"
+        "v3.9.0/bio/multiqc"
 
 
 rule multiqc__report_variants:
@@ -25,4 +25,4 @@ rule multiqc__report_variants:
     log:
         "logs/multiqc/variants.log",
     wrapper:
-        "v3.8.0/bio/multiqc"
+        "v3.9.0/bio/multiqc"

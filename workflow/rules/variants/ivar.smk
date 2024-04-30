@@ -11,7 +11,7 @@ rule ivar__get_variants:
     log:
         "logs/variants_ivar/get_variants/{reference}/{sample}.log",
     wrapper:
-        "https://github.com/xsitarcik/wrappers/raw/v1.12.7/wrappers/ivar/variants"
+        "https://github.com/xsitarcik/wrappers/raw/v1.13.4/wrappers/ivar/variants"
 
 
 rule ivar__tsv_to_vcf:
@@ -23,7 +23,7 @@ rule ivar__tsv_to_vcf:
     log:
         "logs/variants_ivar/tsv_to_vcf_{step}/{reference}/{sample}.log",
     wrapper:
-        "https://github.com/xsitarcik/wrappers/raw/v1.12.7/wrappers/ivar/vcf_convert"
+        "https://github.com/xsitarcik/wrappers/raw/v1.13.4/wrappers/ivar/vcf_convert"
 
 
 rule ivar__filter_variants:
@@ -40,7 +40,7 @@ rule ivar__filter_variants:
     log:
         "logs/variants_ivar/filter_variants/{reference}/{sample}.log",
     wrapper:
-        "https://github.com/xsitarcik/wrappers/raw/v1.12.7/wrappers/ivar/mixed_positions"
+        "https://github.com/xsitarcik/wrappers/raw/v1.13.4/wrappers/ivar/mixed_positions"
 
 
 rule ivar__convert_to_html:
@@ -58,4 +58,4 @@ rule ivar__convert_to_html:
     log:
         "logs/variants_ivar/convert_to_html_{step}/{reference}/{sample}.log",
     wrapper:
-        "https://github.com/xsitarcik/wrappers/raw/v1.12.7/wrappers/ivar/html_convert"
+        "https://github.com/xsitarcik/wrappers/raw/v1.13.4/wrappers/ivar/html_convert"
