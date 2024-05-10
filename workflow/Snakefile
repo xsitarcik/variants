@@ -38,8 +38,6 @@ include: "rules/summary.smk"
 
 rule all:
     input:
-        **mapping_workflow.get_outputs(),
-        **mapping_workflow.reads_workflow.get_outputs(),
         **get_outputs(),
         **get_standalone_outputs(),
     default_target: True

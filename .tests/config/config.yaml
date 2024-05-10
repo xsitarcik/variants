@@ -9,7 +9,7 @@ mapping:
   mapping: "bwa" # Specify method for mapping. Allowed: "bwa".
   reference_fasta_paths: ["test_data/reference/sars_cov_2/sars_cov_2.fa"] # specify list of reference dirs to map against. Each dir must contain a fasta file names as the basename dir.
   deduplication: "picard" # OPT - specify method for mapping deduplication. Allowed: "picard", null.
-  _generate_qualimap: ["deduplication"] # OPT - specify which steps to generate qualimap for. Allowed: "mapping", "deduplication" or empty list (default: empty list).
+  _generate_qualimap: true # bool(true): If true, qualimap will be generated for the last step.
 
 variants:
   callers: ["bcftools", "ivar", "mutect2", "freebayes"] # list of enum([]): Variant-calling methods. Allowed: 'bcftools','ivar','mutect2','freebayes'.
@@ -201,5 +201,5 @@ threads:
   variants__mutect2: 4
 
 module_versions:
-  reads: "v3.4.2" # str(v3.4.2): Version of reads module.
-  mapping: "v2.3.2" # str(v2.3.2): Version of mapping module.
+  reads: "v3.4.4" # str(v3.4.4): Version of reads module.
+  mapping: "v3.0.0" # str(v3.0.0): Version of mapping module.

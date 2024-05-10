@@ -5,7 +5,7 @@ rule bcftools__stats:
     output:
         report(
             "results/variants/{reference}/{sample}/stats/{tool}_{step}.txt",
-            category="Variant stats - {reference}",
+            category="Variants - {reference} - stats",
             labels={
                 "Sample": "{sample}",
                 "Type": "Stats for {tool} - {step}",

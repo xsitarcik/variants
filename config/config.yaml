@@ -10,12 +10,12 @@ mapping:
   reference_fasta_paths:
     - "/data/projects/uvz_meningitidis/reference/neisseria_meningitidis/neisseria_meningitidis.fa"
   deduplication: "picard" # null/enum: Deduplication method to use. Allowed: 'picard'.
-  _generate_qualimap: ["deduplication"] # list of enum([]): Steps to generate qualimap for. Allowed: 'mapping','deduplication'.
+  _generate_qualimap: true # bool(true): If true, qualimap will be generated for the last step.
 
 variants:
-  callers: [] # list of enum([]): Variant-calling methods. Allowed: 'bcftools','ivar','mutect2','freebayes'.
+  callers: ["bcftools", "freebayes"] # list of enum([]): Variant-calling methods. Allowed: 'bcftools','ivar','mutect2','freebayes'.
 consensus:
-  callers: [] # list of enum([]): Consensus-calling methods. Allowed: 'ivar'.
+  callers: ["ivar"] # list of enum([]): Consensus-calling methods. Allowed: 'ivar'.
 
 # HYPERPARAMETERS
 
@@ -46,8 +46,8 @@ reads__trimming__cutadapt: # Relevant only if reads->trimming is set to cutadapt
     adapters_5_end_file: TO_BE_DEFINED # null/str: Fasta file path with adapters to be matched at 5'end.
   shorten_to_length: null # null/int: Shorten each read to the specified length. Corresponds to the cutadapt length parameter.
   trim_N_bases_on_ends: false # bool(false): Set to true to trim 'N' bases on ends.
-  min_length_r1: null # null/int: Discards R1 reads shorter than this. Recommended to set at least to 1, to discard empty reads.
-  min_length_r2: null # null/int: Discards R2 reads shorter than this. Recommended to set at least to 1, to discard empty reads.
+  min_length_r1: 45 # null/int: Discards R1 reads shorter than this. Recommended to set at least to 1, to discard empty reads.
+  min_length_r2: 45 # null/int: Discards R2 reads shorter than this. Recommended to set at least to 1, to discard empty reads.
   max_length_r1: null # null/int: Discards R1 reads longer than this value.
   max_length_r2: null # null/int: Discards R2 reads longer than this value.
   max_n_bases: null # null/int: Removes reads with more 'N' bases than the specified number.
@@ -70,7 +70,7 @@ variants__bcftools: # Relevant only if bcftools is specified in variants->caller
   adjust_mapping_quality: 50 # int(0): Adjust quality for high number of mismatches. Recommended to set to 50 when using BWA.
   max_read_depth: 250 # int(250): At a position, read maximally this number of reads. Should be adjusted to about twice the average read depth as higher read depths usually indicate problematic regions which are often enriched for artefacts.
   min_mapping_quality: 0 # int(0): Minimum mapping quality for an alignment to be used.
-  min_base_quality: 1 # int(1): Minimum base quality for a base to be considered.
+  min_base_quality: 0 # int(1): Minimum base quality for a base to be considered.
   max_base_quality_cap: 60 # int(60): Caps the base quality to a maximum value. This can be particularly useful on technologies that produce overly optimistic high qualities.
   mpileup_annotate: ["AD", "ADF", "ADR", "DP"] # list of str: Tags to add in mpileup. Run `bcftools mpileup --annotate ?` to see tags.
   gap_ext_prob: 20 # int(20): Phred-scaled gap extension sequencing error probability. Reducing it leads to longer indels.
@@ -164,7 +164,7 @@ variants__mutect2: # Relevant only if mutect2 is specified in variants->callers.
 consensus__ivar: # Relevant only if ivar is specified in consensus->callers.
   count_orphans: true # bool(false): Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
   max_read_depth: 0 # int(8000): This limits the number of reads to load in memory per input file. Decreases needed memory but increases running time. Zero sets it to the highest possible value.
-  redo_base_alignment_quality: false # bool(true): If true, samtools recalculates BAQ on the fly, ignore existing BQ tags.
+  redo_base_alignment_quality: true # bool(true): If true, samtools recalculates BAQ on the fly, ignore existing BQ tags.
   min_mapping_quality: 20 # int(0): Minimum mapping quality for an alignment to be used.
   min_base_quality: 0 # int(13): Minimum base quality for a base to be considered. Setting to 0 make the overlapping bases reappear, albeit with 0 quality.
   absolutely_all_positions: false # bool(false): If true, mpileup outputs absolutely all positions, including unused reference sequences.
@@ -199,5 +199,5 @@ threads:
   variants__mutect2: 4 # int: Number of threads to use for mutect2 variants.
 
 module_versions:
-  reads: "v3.4.2" # str(v3.4.2): Version of reads module.
-  mapping: "v2.3.2" # str(v2.3.2): Version of mapping module.
+  reads: "v3.4.4" # str(v3.4.4): Version of reads module.
+  mapping: "v3.0.0" # str(v3.0.0): Version of mapping module.

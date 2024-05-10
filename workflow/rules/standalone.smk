@@ -1,28 +1,20 @@
 rule multiqc__report:
     input:
-        **get_multiqc_inputs_no_variants(),
+        unpack(infer_multiqc_inputs_for_reference),
         config=f"{workflow.basedir}/resources/multiqc.yaml",
     output:
-        "results/_aggregation/multiqc.html",
+        report(
+            "results/_aggregation/multiqc_{reference}.html",
+            category="Summary",
+            labels={
+                "Reference": "{reference}",
+                "Type": "MultiQC",
+            },
+        ),
     params:
         use_input_files_only=True,
-        extra="",
+        extra=lambda wildcards: f"--title 'Reference: {wildcards.reference}'",
     log:
-        "logs/multiqc/all.log",
-    wrapper:
-        "v3.9.0/bio/multiqc"
-
-
-rule multiqc__report_variants:
-    input:
-        **get_multiqc_inputs_variants(),
-        config=f"{workflow.basedir}/resources/multiqc.yaml",
-    output:
-        "results/_aggregation/multiqc_variants.html",
-    params:
-        use_input_files_only=True,
-        extra=f"-d -dd 2",
-    log:
-        "logs/multiqc/variants.log",
+        "logs/multiqc/{reference}.log",
     wrapper:
         "v3.9.0/bio/multiqc"
