@@ -18,7 +18,7 @@ rule ivar__consensus_per_segment:
         consensus="results/consensus/{reference}/{sample}/segments/ivar_{segment}.fa",
         qual=temp("results/consensus/{reference}/{sample}/segments/ivar_{segment}.qual.txt"),
     params:
-        name=lambda wildcards: f"{wildcards.sample}_{wildcards.segment}__ivar",
+        name=lambda wildcards: f"{wildcards.sample}_{wildcards.segment}",
         samtools_params=lambda wildcards: f"--region {wildcards.segment} {parse_samtools_mpileup_for_ivar('consensus')}",
         ivar_params=parse_ivar_params_for_consensus(),
     log:

@@ -80,7 +80,11 @@ def get_outputs():
         raise ValueError("No outputs defined for variant calling or consensus calling.")
 
     if config["consensus"]["callers"]:
-        outputs["concat_consensus"] = expand("results/_aggregation/consensus/{reference}.fa", reference=references)
+        outputs["concat_consensus"] = expand(
+            "results/_aggregation/consensus/{reference}_{tool}.fa",
+            reference=references,
+            tool=config["consensus"]["callers"],
+        )
 
     outputs = outputs | get_mapping_outputs()
     return outputs
@@ -111,11 +115,10 @@ def infer_segment_consensuses(wildcards):
     return expand("results/consensus/{{reference}}/{{sample}}/segments/{{tool}}_{segment}.fa", segment=segments)
 
 
-def infer_consensuses_for_reference(wildcards):
+def infer_consensuses_for_reference_tool(wildcards):
     return expand(
-        "results/consensus/{{reference}}/{sample}/{tool}.fa",
+        "results/consensus/{{reference}}/{sample}/{{tool}}.fa",
         sample=get_sample_names(),
-        tool=config["consensus"]["callers"],
     )
 
 

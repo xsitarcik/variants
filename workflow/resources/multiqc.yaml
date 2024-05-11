@@ -159,8 +159,8 @@ table_columns_visible:
     50_x_pc: False
     general_error_rate: False
     mapped_reads: False
-  "Samtools (?)": False
-  "BCFtools": False
+  "Samtools (?): stats": False
+  "BCFtools: Stats": False
 
 table_columns_placement:
   "Cutadapt - trimming":
