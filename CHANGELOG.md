@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.2.0](https://github.com/xsitarcik/variants/compare/v2.1.0...v2.2.0) (2024-05-11)
+
+
+### Features
+
+* added concat consensus ([27877c7](https://github.com/xsitarcik/variants/commit/27877c78cec99b24d0b739c551ba2d6ad6921aca))
+* multiqc requested per ref ([43dadb3](https://github.com/xsitarcik/variants/commit/43dadb386fed1187129f0bd1f6313158f848338a))
+* segmental consensus and aggregate consensus ([c2cca65](https://github.com/xsitarcik/variants/commit/c2cca6540d10790567db053ffa8cf94d322ad3c7))
+
+
+### Bug Fixes
+
+* added outputs of reads module ([a656b1e](https://github.com/xsitarcik/variants/commit/a656b1ed592c77191b2880c60c5c0e19ab9d1b07))
+* aggregated consensuses per ref and tool ([ef3505d](https://github.com/xsitarcik/variants/commit/ef3505d8aaaa80f1ad668a98742fc165aa3fcced))
+* report reorganization ([c781c11](https://github.com/xsitarcik/variants/commit/c781c119c6448c7cdb65e0d4fab6e75d7cd2fc7d))
+
+
+### Performance Improvements
+
+* bumped modules ([944f092](https://github.com/xsitarcik/variants/commit/944f0921982467ca20b73f9d0445f1f738f6e43e))
+* bumped wrappers ([9bb03dd](https://github.com/xsitarcik/variants/commit/9bb03dd2d18c77fbcc3a2ec697a23c1f07b81159))
+* bumped wrappers ([7d4bad0](https://github.com/xsitarcik/variants/commit/7d4bad056a403c94cec7daca5ce63cb75a6391ab))
+
 ## [2.1.0](https://github.com/xsitarcik/variants/compare/v2.0.0...v2.1.0) (2024-04-25)
 
 
