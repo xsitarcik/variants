@@ -2,6 +2,8 @@ prepend_dirs_sep: "/"
 prepend_dirs_depth: 0
 prepend_dirs: true
 no_version_check: true
+show_analysis_paths: False
+show_analysis_time: False
 
 run_modules:
   - fastqc
@@ -150,14 +152,34 @@ table_columns_visible:
     mean_coverage: True
     10_x_pc: True
     30_x_pc: True
-    avg_gc: False
     median_insert_size: True
+    avg_gc: False
     1_x_pc: False
     5_x_pc: False
     50_x_pc: False
     general_error_rate: False
     mapped_reads: False
-  Samtools (?): False
+  "Samtools (?)": False
+  "BCFtools": False
+
+table_columns_placement:
+  "Cutadapt - trimming":
+    percent_trimmed: 900
+  Qualimap:
+    total_reads: 910
+    percentage_aligned: 920
+    median_coverage: 930
+    mean_coverage: 940
+    10_x_pc: 950
+    30_x_pc: 960
+    median_insert_size: 970
+
+table_cond_formatting_rules:
+  mqc-generalstats-qualimap-10_x_pc:
+    pass:
+      - gt: 10
+    fail:
+      - lt: 10
 
 read_count_multiplier: 0.001
 read_count_prefix: "K"
