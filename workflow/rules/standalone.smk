@@ -5,7 +5,7 @@ rule multiqc__report:
     output:
         report(
             "results/_aggregation/multiqc_{reference}.html",
-            category="_Summary",
+            category="Summary",
             labels={
                 "Reference": "{reference}",
                 "Type": "MultiQC",
@@ -17,4 +17,4 @@ rule multiqc__report:
     log:
         "logs/multiqc/{reference}.log",
     wrapper:
-        "v3.9.0/bio/multiqc"
+        "v3.10.2/bio/multiqc"
