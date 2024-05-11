@@ -30,14 +30,29 @@ def get_reference_dir_for_name(reference: str):
     return mapping_workflow.get_reference_dir_for_name(reference)
 
 
-def get_multiqc_inputs_for_mapping():
-    return mapping_workflow.get_multiqc_inputs()
+def get_multiqc_inputs_for_mapping_reference(reference: str):
+    return mapping_workflow.get_multiqc_inputs(reference)
+
+
+def get_mapping_outputs():
+    return mapping_workflow.get_outputs()
 
 
 ### Data input handling independent of wildcards ######################################################################
 
 
 ### Global rule-set stuff #############################################################################################
+
+
+def get_multiqc_variants_inputs_for_reference(reference: str):
+    inputs = {}
+    for tool in config["variants"]["callers"]:
+        step = "filtered" if config[f"variants__{tool}"]["do_postfilter"] else "all"
+        inputs[f"stats_{tool}"] = expand(
+            f"results/variants/{reference}/{{sample}}/stats/{tool}_{step}.txt",
+            sample=get_sample_names(),
+        )
+    return inputs
 
 
 def get_outputs():
@@ -63,14 +78,22 @@ def get_outputs():
 
     if not outputs:
         raise ValueError("No outputs defined for variant calling or consensus calling.")
+
+    if config["consensus"]["callers"]:
+        outputs["concat_consensus"] = expand(
+            "results/_aggregation/consensus/{reference}_{tool}.fa",
+            reference=references,
+            tool=config["consensus"]["callers"],
+        )
+
+    outputs = outputs | get_mapping_outputs()
     return outputs
 
 
 def get_standalone_outputs():
     # outputs that will be produced if the module is run as a standalone workflow, not as a part of a larger workflow
     return {
-        "multiqc_report": "results/_aggregation/multiqc.html",
-        "multiqc_variants": "results/_aggregation/multiqc_variants.html",
+        "multiqc": expand("results/_aggregation/multiqc_{reference}.html", reference=get_reference_names()),
     }
 
 
@@ -84,6 +107,19 @@ def infer_reference_fasta(wildcards):
 
 def infer_reference_faidx(wildcards):
     return f"{get_reference_dir_for_name(wildcards.reference)}/{wildcards.reference}.fa.fai"
+
+
+def infer_segment_consensuses(wildcards):
+    with checkpoints.samtools__index_reference.get(reference=wildcards.reference).output[0].open() as f:
+        segments = [line.split()[0] for line in f.readlines()]
+    return expand("results/consensus/{{reference}}/{{sample}}/segments/{{tool}}_{segment}.fa", segment=segments)
+
+
+def infer_consensuses_for_reference_tool(wildcards):
+    return expand(
+        "results/consensus/{{reference}}/{sample}/{{tool}}.fa",
+        sample=get_sample_names(),
+    )
 
 
 ### Parameter parsing from config #####################################################################################
@@ -334,17 +370,9 @@ def get_all_relevant_extra_params():
 ### Contract for other workflows ######################################################################################
 
 
-def get_multiqc_inputs_no_variants():
-    return get_multiqc_inputs_for_mapping()
-
-
-def get_multiqc_inputs_variants():
-    outs = {}
-
-    for k, v in get_outputs().items():
-        if k.startswith("stats_"):
-            outs[k] = v
-    return outs
+def infer_multiqc_inputs_for_reference(wildcards):
+    inputs = get_multiqc_variants_inputs_for_reference(wildcards.reference)
+    return inputs | get_multiqc_inputs_for_mapping_reference(wildcards.reference)
 
 
 ### Resource handling #################################################################################################

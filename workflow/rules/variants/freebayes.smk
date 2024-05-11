@@ -57,7 +57,7 @@ rule freebayes__filter_vcf:
         "logs/variants_freebayes/filter_vcf/{reference}/{sample}.log",
     threads: get_threads_for_freebayes()
     wrapper:
-        "v3.7.0/bio/bcftools/filter"
+        "v3.10.2/bio/bcftools/filter"
 
 
 rule freebayes__view_filtered:
@@ -66,9 +66,10 @@ rule freebayes__view_filtered:
     output:
         report(
             "results/variants/{reference}/{sample}/freebayes_filtered.vcf",
-            category="{sample} - {reference}",
+            category="Variants - {reference}",
             labels={
-                "Type": "Variants - freebayes/filtered",
+                "Sample": "{sample}",
+                "Type": "Freebayes - filtered",
             },
         ),
     params:
@@ -77,4 +78,4 @@ rule freebayes__view_filtered:
         "logs/variants_freebayes/view_filtered/{reference}/{sample}.log",
     threads: get_threads_for_freebayes()
     wrapper:
-        "v3.7.0/bio/bcftools/view"
+        "v3.10.2/bio/bcftools/view"

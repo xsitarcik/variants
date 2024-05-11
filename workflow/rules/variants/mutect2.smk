@@ -25,7 +25,7 @@ rule mutect2__bed_to_interval_list:
     resources:
         mem_mb=get_mem_mb_for_mutect2,
     wrapper:
-        "v3.8.0/bio/picard/bedtointervallist"
+        "v3.10.2/bio/picard/bedtointervallist"
 
 
 rule mutect2__replace_read_groups:
@@ -41,7 +41,7 @@ rule mutect2__replace_read_groups:
     params:
         extra="--RGLB lib1 --RGPL illumina --RGPU {sample} --RGSM {sample}",
     wrapper:
-        "v3.8.0/bio/picard/addorreplacereadgroups"
+        "v3.10.2/bio/picard/addorreplacereadgroups"
 
 
 rule mutect2__sambamba_index_bam:
@@ -55,7 +55,7 @@ rule mutect2__sambamba_index_bam:
     params:
         extra="",
     wrapper:
-        "v3.8.0/bio/sambamba/index"
+        "v3.10.2/bio/sambamba/index"
 
 
 rule mutect2_call:
@@ -78,7 +78,7 @@ rule mutect2_call:
     log:
         "logs/variants_mutect2/call/{reference}/{sample}.log",
     wrapper:
-        "v3.8.0/bio/gatk/mutect"
+        "v3.10.2/bio/gatk/mutect"
 
 
 rule mutect2__gatk_learn_read_orientation_model:
@@ -94,7 +94,7 @@ rule mutect2__gatk_learn_read_orientation_model:
     log:
         "logs/variants_mutect2/gatk_learn_read_orientation_model/{reference}/{sample}.log",
     wrapper:
-        "v3.8.0/bio/gatk/learnreadorientationmodel"
+        "v3.10.2/bio/gatk/learnreadorientationmodel"
 
 
 rule mutect2__filter_calls:
@@ -107,7 +107,14 @@ rule mutect2__filter_calls:
         bam_bai="results/variants/{reference}/{sample}/mutect2_fixed.bam.bai",
         f1r2="results/variants/{reference}/{sample}/mutect2_artifacts_prior.tar.gz",
     output:
-        vcf="results/variants/{reference}/{sample}/mutect2_filtered.vcf",
+        vcf=report(
+            "results/variants/{reference}/{sample}/mutect2_filtered.vcf",
+            category="Variants - {reference}",
+            labels={
+                "Sample": "{sample}",
+                "Type": "GATK mutect2 - filtered",
+            },
+        ),
         stats="results/variants/{reference}/{sample}/mutect2_filtered.vcf.filteringStats.tsv",
     threads: get_threads_for_mutect2()
     resources:
@@ -118,4 +125,4 @@ rule mutect2__filter_calls:
         extra=parse_mutect2_filter_params(),
         java_opts="",
     wrapper:
-        "v3.8.0/bio/gatk/filtermutectcalls"
+        "v3.10.2/bio/gatk/filtermutectcalls"

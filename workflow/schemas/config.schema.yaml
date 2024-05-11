@@ -356,7 +356,7 @@ definitions:
       min_base_quality:
         type: integer
         default: 1
-        examples: [1]
+        examples: [0]
         description: "Minimum base quality for a base to be considered."
       max_base_quality_cap:
         type: integer
@@ -610,7 +610,7 @@ definitions:
       redo_base_alignment_quality:
         type: boolean
         default: true
-        examples: [false]
+        examples: [true]
         description: "If true, samtools recalculates BAQ on the fly, ignore existing BQ tags."
       min_mapping_quality:
         type: integer
@@ -801,12 +801,12 @@ definitions:
     properties:
       reads:
         type: string
-        default: "v3.4.0"
+        default: "v3.4.2"
         pattern: "v[0-9]+.[0-9]+.[0-9]+"
         description: "Version of reads module"
       mapping:
         type: string
-        default: "v2.3.1"
+        default: "v2.3.2"
         pattern: "v[0-9]+.[0-9]+.[0-9]+"
         description: "Version of mapping module"
     title: ModuleVersions

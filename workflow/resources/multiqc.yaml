@@ -1,14 +1,190 @@
+prepend_dirs_sep: "/"
+prepend_dirs_depth: 0
+prepend_dirs: true
+no_version_check: true
+show_analysis_paths: False
+show_analysis_time: False
+
+run_modules:
+  - fastqc
+  - cutadapt
+  - kraken
+  - picard
+  - qualimap
+  - samtools
+  - bcftools
+
+kraken:
+  top_n: 10
+
+module_order:
+  - fastqc:
+      name: "FastQC - original"
+      target: "FastQC"
+      anchor: "fastqc_original"
+      info: "FastQC reports on raw original reads."
+      path_filters:
+        - "results/reads/original/fastqc/*fastqc_data.txt"
+  - fastqc:
+      name: "FastQC - trimming"
+      target: "FastQC"
+      anchor: "fastqc_trimming"
+      info: "FastQC reports on reads after trimming."
+      path_filters:
+        - "results/reads/trimming/fastqc/*fastqc_data.txt"
+  - fastqc:
+      name: "FastQC - subsampling"
+      target: "FastQC"
+      anchor: "fastqc_subsampling"
+      info: "FastQC reports on reads after subsampling."
+      path_filters:
+        - "results/reads/subsampling/fastqc/*fastqc_data.txt"
+  - fastqc:
+      name: "FastQC - deduplication"
+      target: "FastQC"
+      anchor: "fastqc_deduplication"
+      info: "FastQC reports on reads after deduplication."
+      path_filters:
+        - "results/reads/deduplication/fastqc/*fastqc_data.txt"
+  - fastqc:
+      name: "FastQC - decontamination"
+      target: "FastQC"
+      anchor: "fastqc_decontamination"
+      info: "FastQC reports on reads after decontamination."
+      path_filters:
+        - "results/reads/decontamination/fastqc/*fastqc_data.txt"
+  - cutadapt:
+      name: "Cutadapt - trimming"
+      target: "cutadapt"
+      anchor: "cutadapt"
+  - kraken:
+      name: "Species Diversity"
+      target: "Kraken2"
+      anchor: "kraken"
+  - qualimap:
+      name: "Qualimap"
+      target: "Qualimap"
+      anchor: "qualimap"
+  - samtools:
+      name: "Samtools (?)"
+      target: "Samtools (?)"
+      anchor: "samtools_stats"
+  - picard:
+      name: "Picard"
+      target: "Picard"
+      anchor: "picard_deduplication"
+  - bcftools:
+      name: "BCFtools"
+      target: "BCFtools"
+      anchor: "bcftools_stats"
+
 fn_clean_exts:
   - ".kreport2"
-  - ".bam"
   - "_R1.fastq.gz"
   - "_R2.fastq.gz"
   - ".samtools_stats"
-  - ".txt"
   - ".vcf"
-
-prepend_dirs_sep: "/"
 
 extra_fn_clean_exts:
   - type: remove
-    pattern: stats/
+    pattern: "results/"
+  - type: remove
+    pattern: "reads/trimming/"
+    module: cutadapt
+  - type: remove
+    pattern: "kraken/"
+    module: kraken
+  - type: remove
+    pattern: "fastqc/"
+    module:
+      - "fastqc_decontamination"
+      - "fastqc_deduplication"
+      - "fastqc_original"
+      - "fastqc_subsampling"
+      - "fastqc_trimming"
+  - type: regex_keep
+    pattern: "(deduplication|original|trimming|subsampling|decontamination)\/([^\/]*)_R[1,2]"
+    module:
+      - "fastqc_decontamination"
+      - "fastqc_deduplication"
+      - "fastqc_original"
+      - "fastqc_subsampling"
+      - "fastqc_trimming"
+  - type: regex_keep
+    pattern: "([^\/]*).(deduplication|original)"
+    module:
+      - qualimap
+      - samtools_stats
+      - picard_deduplication
+  - type: regex
+    pattern: "(.deduplication|.original)"
+    module:
+      - qualimap
+      - samtools_stats
+      - picard_deduplication
+  - type: regex_keep
+    pattern: "([^\/]*)\/stats\/([^\/]*)"
+    module:
+      - bcftools_stats
+  - type: remove
+    pattern: "stats/"
+    module: bcftools_stats
+
+table_columns_visible:
+  "FastQC - original":
+    percent_duplicates: False
+    percent_gc: False
+    avg_sequence_length: False
+    median_sequence_length: False
+    percent_fails: True
+    total_sequences: True
+  "FastQC - trimming": False
+  "FastQC - subsampling": False
+  "FastQC - deduplication": False
+  "FastQC - decontamination": False
+  "Cutadapt - trimming":
+    percent_trimmed: True
+  "Species Diversity": False
+  Qualimap:
+    total_reads: True
+    percentage_aligned: True
+    median_coverage: True
+    mean_coverage: True
+    10_x_pc: True
+    30_x_pc: True
+    median_insert_size: True
+    avg_gc: False
+    1_x_pc: False
+    5_x_pc: False
+    50_x_pc: False
+    general_error_rate: False
+    mapped_reads: False
+  "Samtools (?): stats": False
+  "BCFtools: Stats": False
+
+table_columns_placement:
+  "Cutadapt - trimming":
+    percent_trimmed: 900
+  Qualimap:
+    total_reads: 910
+    percentage_aligned: 920
+    median_coverage: 930
+    mean_coverage: 940
+    10_x_pc: 950
+    30_x_pc: 960
+    median_insert_size: 970
+
+table_cond_formatting_rules:
+  mqc-generalstats-qualimap-10_x_pc:
+    pass:
+      - gt: 10
+    fail:
+      - lt: 10
+
+read_count_multiplier: 0.001
+read_count_prefix: "K"
+read_count_desc: "thousands"
+
+base_count_multiplier: 0.001
+base_count_prefix: "K"
+base_count_desc: "thousands"

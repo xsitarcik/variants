@@ -4,7 +4,6 @@ min_version("7.25.0")
 
 
 include: "rules/common.smk"
-include: "rules/stats.smk"
 
 
 module mapping_workflow:
@@ -33,15 +32,19 @@ if not config.get("module_versions") or "variants" not in config["module_version
     include: "rules/standalone.smk"
 
 
+include: "rules/stats.smk"
+include: "rules/summary.smk"
+
+
 rule all:
     input:
-        **mapping_workflow.get_outputs(),
         **get_outputs(),
         **get_standalone_outputs(),
     default_target: True
     localrule: True
 
 
-if extra := get_all_relevant_extra_params():
-    logger.info("Variants module - extra parameters parsed from config:")
-    logger.info(get_all_relevant_extra_params())
+onstart:
+    if extra := get_all_relevant_extra_params():
+        logger.info("Variants module - extra parameters parsed from config:")
+        logger.info(extra)
