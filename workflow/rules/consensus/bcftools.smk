@@ -50,7 +50,8 @@ rule bcftools__consensus:
         tool="(freebayes|mutect2|bcftools)",
     params:
         extra=get_bcftools_consensus_extra(),
+        prefix=lambda wildcards: f"{wildcards.sample}_",
     conda:
         "../../envs/bcftools.yaml"
     shell:
-        "bcftools consensus --prefix {wildcards.sample} --fasta-ref {input.ref} --mask {input.bed} {params.extra} {input.vcf_gz} 1> {output} 2>{log}"
+        "bcftools consensus --prefix {params.prefix} --fasta-ref {input.ref} --mask {input.bed} {params.extra} {input.vcf_gz} 1> {output} 2>{log}"
