@@ -53,4 +53,4 @@ rule bcftools__consensus:
     conda:
         "../../envs/bcftools.yaml"
     shell:
-        "bcftools consensus --fasta-ref {input.ref} --mask {input.bed} {params.extra} {input.vcf_gz} 1> {output} 2>{log}"
+        "bcftools consensus --prefix {wildcards.sample} --fasta-ref {input.ref} --mask {input.bed} {params.extra} {input.vcf_gz} 1> {output} 2>{log}"
