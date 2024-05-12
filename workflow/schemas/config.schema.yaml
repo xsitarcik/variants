@@ -27,6 +27,10 @@ definitions:
         type: object
         "$ref": "#/definitions/VariantsMutect2"
         description: "Relevant only if mutect2 is specified in variants->callers"
+      consensus__bcftools:
+        type: object
+        "$ref": "#/definitions/ConsensusBcftools"
+        description: "The final vcf is taken to produce consensus using bcftools."
       consensus__ivar:
         type: object
         "$ref": "#/definitions/ConsensusIvar"
@@ -115,6 +119,56 @@ definitions:
         then:
           required:
             - consensus__ivar
+      - if:
+          properties:
+            variants:
+              properties:
+                bcftools_consensus:
+                  contains:
+                    type: string
+                    const: "bcftools"
+        then:
+          properties:
+            variants:
+              properties:
+                callers:
+                  contains:
+                    type: string
+                    const: "bcftools"
+      - if:
+          properties:
+            variants:
+              properties:
+                bcftools_consensus:
+                  contains:
+                    type: string
+                    const: "freebayes"
+        then:
+          properties:
+            variants:
+              properties:
+                callers:
+                  contains:
+                    type: string
+                    const: "freebayes"
+          message: "variants->callers must contain freebayes if variants->bcftools_consensus contains freebayes."
+      - if:
+          properties:
+            variants:
+              properties:
+                bcftools_consensus:
+                  contains:
+                    type: string
+                    const: "mutect2"
+        then:
+          properties:
+            variants:
+              properties:
+                callers:
+                  contains:
+                    type: string
+                    const: "mutect2"
+          message: "variants->callers must contain mutect2 if variants->bcftools_consensus contains mutect2."
     required:
       - module_versions
       - consensus
@@ -135,8 +189,20 @@ definitions:
             - "ivar"
             - "mutect2"
             - "freebayes"
+      bcftools_consensus:
+        type: array
+        items:
+          type: string
+          enum:
+            - "all"
+            - "bcftools"
+            - "freebayes"
+            - "mutect2"
+        description: "Call consensus from called variants by specified methods, or use 'all' for all used and relevant callers."
+        examples: ["all"]
     required:
       - callers
+      - bcftools_consensus
   Consensus:
     additionalProperties: false
     title: Consensus
@@ -593,6 +659,73 @@ definitions:
       - trim_alt_alleles
       - additional_tags
     title: VariantsBcftoolsPostfilter
+  ConsensusBcftools:
+    type: object
+    additionalProperties: false
+    properties:
+      low_coverage_mask:
+        type: integer
+        default: 0
+        examples: [10]
+        description: "Reference sites with coverage less than this value will be masked, i.e. ignored in consensus calling."
+      char_for_masked:
+        type: string
+        default: "N"
+        examples: ["N"]
+        description: "Use this character for sites masked by `low_coverage_mask`."
+      mark_deletions:
+        type: string
+        enum:
+          - "-"
+          - null
+        default: "-"
+        examples: ["-"]
+        description: "If not specified, deletions sites are removed from consensus. Else specify character to be inserted for deletions."
+      insertions_case:
+        type: string
+        enum:
+          - "upper"
+          - "lower"
+        default: "upper"
+        examples: ["upper"]
+        description: "Specify case of inserted bases to highlight."
+      snv_case:
+        type: string
+        enum:
+          - "upper"
+          - "lower"
+        default: "upper"
+        examples: ["upper"]
+        description: "Case of SNV bases."
+      include:
+        type: [string, "null"]
+        default: null
+        examples: [null]
+        description: "Include only sites for which EXPRESSION is true."
+      exclude:
+        type: [string, "null"]
+        default: null
+        examples: [null]
+        description: "Exclude sites for which EXPRESSION is true."
+      haplotype:
+        type: string
+        enum:
+          - "iupac"
+          - "ref"
+          - "alt"
+        default: "iupac"
+        examples: ["iupac"]
+        description: "Define how to handle heterozygous alleles: IUPAC codes, REF allele, ALT allele."
+    required:
+      - low_coverage_mask
+      - char_for_masked
+      - mark_deletions
+      - insertions_case
+      - snv_case
+      - haplotype
+      - exclude
+      - include
+    title: ConsensusBcftools
   VariantsIvar:
     type: object
     additionalProperties: false

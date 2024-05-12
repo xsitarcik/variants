@@ -14,6 +14,7 @@ mapping:
 
 variants:
   callers: ["bcftools", "freebayes"] # list of enum([]): Variant-calling methods. Allowed: 'bcftools','ivar','mutect2','freebayes'.
+  bcftools_consensus: ["all"] # list of enum(["all"]): Call consensus from called variants by specified methods, or use 'all' for all used and relevant callers. Allowed: 'bcftools','freebayes', 'mutect2', 'all'.
 consensus:
   callers: ["ivar"] # list of enum([]): Consensus-calling methods. Allowed: 'ivar'.
 
@@ -160,6 +161,16 @@ variants__mutect2: # Relevant only if mutect2 is specified in variants->callers.
     min_reads_per_strand: 0 # int(0): Minimum alt reads required on both forward and reverse strands.
     min_slippage_length: 8 # int(8): Minimum number of reference bases in an STR to suspect polymerase slippage.
     pcr_slippage_rate: 0.1 # float(0.1): The frequency of polymerase slippage in contexts where it is suspected.
+
+consensus__bcftools: # The final vcf is taken to produce consensus using bcftools.
+  low_coverage_mask: 10 # int(0): reference sites with coverage less than this value will be masked, i.e. ignored in consensus calling.
+  char_for_masked: "N" # str(N): use this character for sites masked by `low_coverage_mask`.
+  mark_deletions: "-" # null/str: If not specified, deletions sites are removed from consensus. Else specify character to be inserted for deletions.
+  insertions_case: "upper" # enum(upper): Specify case of inserted bases to highlight. Allowed: 'upper','lower'.
+  snv_case: "upper" # enum(upper): Case of SNV bases. Allowed: 'upper','lower'.
+  include: null # null/str: include only sites for which EXPRESSION is true.
+  exclude: null # null/str: exclude sites for which EXPRESSION is true.
+  haplotype: "iupac" # define how to handle heterozygous alleles: IUPAC codes, REF allele, ALT allele. Allowed: 'iupac','ref','alt'.
 
 consensus__ivar: # Relevant only if ivar is specified in consensus->callers.
   count_orphans: true # bool(false): Set to true to use also anomalous read pairs, i.e. without the properly-paired flag set.
