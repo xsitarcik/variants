@@ -32,15 +32,15 @@ rule concat__consensus_from_segments:
         consensuses=infer_segment_consensuses,
     output:
         report(
-            "results/consensus/{reference}/{sample}/{tool}.fa",
+            "results/consensus/{reference}/{sample}/ivar.fa",
             category="Consensus - {reference}",
             labels={
                 "Sample": "{sample}",
-                "Type": "{tool}",
+                "Type": "ivar",
             },
         ),
     log:
-        "logs/concat/consensus_from_segments/{sample}/{reference}_{tool}.log",
+        "logs/concat/consensus_from_segments/{sample}/{reference}_ivar.log",
     localrule: True
     conda:
         "../../envs/awk_sed.yaml"

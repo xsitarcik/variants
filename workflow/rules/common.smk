@@ -86,6 +86,20 @@ def get_outputs():
             tool=config["consensus"]["callers"],
         )
 
+    if val := config["variants"]["bcftools_consensus"]:
+        if len(val) == 1 and val[0] == "all":
+            tools = [tool for tool in config["variants"]["callers"] if tool != "ivar"]
+            outputs["concat_consensus_bcftools"] = expand(
+                "results/_aggregation/consensus/{reference}_{tool}.fa",
+                reference=references,
+                tool=tools,
+            )
+        else:
+            outputs["concat_consensus_bcftools"] = expand(
+                f"results/_aggregation/consensus/{{reference}}_{val}.fa",
+                reference=references,
+            )
+
     outputs = outputs | get_mapping_outputs()
     return outputs
 
@@ -112,7 +126,7 @@ def infer_reference_faidx(wildcards):
 def infer_segment_consensuses(wildcards):
     with checkpoints.samtools__index_reference.get(reference=wildcards.reference).output[0].open() as f:
         segments = [line.split()[0] for line in f.readlines()]
-    return expand("results/consensus/{{reference}}/{{sample}}/segments/{{tool}}_{segment}.fa", segment=segments)
+    return expand("results/consensus/{{reference}}/{{sample}}/segments/ivar_{segment}.fa", segment=segments)
 
 
 def infer_consensuses_for_reference_tool(wildcards):
@@ -122,7 +136,45 @@ def infer_consensuses_for_reference_tool(wildcards):
     )
 
 
+def infer_final_vcf(wildcards):
+    step = "filtered" if config[f"variants__{wildcards.tool}"]["do_postfilter"] else "all"
+    return f"results/variants/{{reference}}/{{sample}}/{{tool}}_{step}.vcf"
+
+
 ### Parameter parsing from config #####################################################################################
+
+
+def get_bcftools_consensus_mask():
+    if not config["variants"]["bcftools_consensus"]:
+        return 0
+    return config["consensus__bcftools"]["low_coverage_mask"]
+
+
+def get_bcftools_consensus_extra():
+    extra = []
+    if val := config["consensus__bcftools"]["haplotype"]:
+        if val == "iupac":
+            code = "I"
+        elif val == "ref":
+            code = "R"
+        elif val == "alt":
+            code = "A"
+        extra.append(f"--haplotype '{code}'")
+    if val := config["consensus__bcftools"]["char_for_masked"]:
+        extra.append(f"--mask-with '{val}'")
+    if val := config["consensus__bcftools"]["mark_deletions"]:
+        extra.append(f"--mark-del '{val}'")
+    if val := config["consensus__bcftools"]["insertions_case"]:
+        code = "uc" if val == "upper" else "lc"
+        extra.append(f"--mark-ins {code}")
+    if val := config["consensus__bcftools"]["snv_case"]:
+        code = "uc" if val == "upper" else "lc"
+        extra.append(f"--mark-snv {code}")
+    if val := config["consensus__bcftools"]["include"]:
+        extra.append(f"--include '{value}'")
+    if val := config["consensus__bcftools"]["exclude"]:
+        extra.append(f"--exclude '{value}'")
+    return " ".join(extra)
 
 
 def get_bcftools_mpileup_params():
@@ -364,6 +416,9 @@ def get_all_relevant_extra_params():
         extra += "IVAR consensus:\n"
         extra += f"\tsamtools mpileup: {parse_samtools_mpileup_for_ivar('consensus')}\n"
         extra += f"\tIVAR consensus: {parse_ivar_params_for_consensus()}\n"
+    if config["variants"]["bcftools_consensus"]:
+        extra += f"BCFtools consensus:\n"
+        extra += f"\textra: {get_bcftools_consensus_extra()}\n"
     return extra
 
 
