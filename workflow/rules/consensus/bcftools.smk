@@ -3,7 +3,7 @@ rule bedtools__mask_bam_low_coverage:
         bam=infer_bam_for_sample_and_ref,
         bai=infer_bai_for_sample_and_ref,
     output:
-        bed="results/coverage/{reference}/{sample}/low_coverage.bed",
+        bed=temp("results/variants/{reference}/{sample}/low_coverage.bed"),
     log:
         "logs/consensus_bcftools/mask_low_coverage/{reference}/{sample}.log",
     params:
@@ -32,9 +32,9 @@ rule bcftools__consensus:
     input:
         ref=infer_reference_fasta,
         index=infer_reference_faidx,
-        vcf_gz=temp("results/variants/{reference}/{sample}/{tool}_for_consensus.vcf.gz"),
-        csi=temp("results/variants/{reference}/{sample}/{tool}_for_consensus.vcf.gz.csi"),
-        bed="results/coverage/{reference}/{sample}/low_coverage.bed",
+        vcf_gz="results/variants/{reference}/{sample}/{tool}_for_consensus.vcf.gz",
+        csi="results/variants/{reference}/{sample}/{tool}_for_consensus.vcf.gz.csi",
+        bed="results/variants/{reference}/{sample}/low_coverage.bed",
     output:
         "results/consensus/{reference}/{sample}/{tool}.fa",
     log:
