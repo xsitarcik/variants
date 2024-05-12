@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.3.0](https://github.com/xsitarcik/variants/compare/v2.2.0...v2.3.0) (2024-05-12)
+
+
+### Features
+
+* bcftools consensus from vcf ([b2f3e9a](https://github.com/xsitarcik/variants/commit/b2f3e9aba737ab57598988f1d8ff6e7d16f74642))
+
+
+### Bug Fixes
+
+* bcftools consensus prefixed with sample ([f73ad81](https://github.com/xsitarcik/variants/commit/f73ad8197bc3acea5112f0ba541051ecb37a65fd))
+* marked bed as temporary ([a5830b5](https://github.com/xsitarcik/variants/commit/a5830b59ae3503dbe95ad6bcf2ba950f881c0ccd))
+
 ## [2.2.0](https://github.com/xsitarcik/variants/compare/v2.1.0...v2.2.0) (2024-05-11)
 
 
