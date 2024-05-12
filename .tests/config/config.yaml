@@ -13,7 +13,7 @@ mapping:
 
 variants:
   callers: ["bcftools", "ivar", "mutect2", "freebayes"] # list of enum([]): Variant-calling methods. Allowed: 'bcftools','ivar','mutect2','freebayes'.
-  bcftools_consensus: ["freebayes"] # list of enum(["all"]): Call consensus from called variants by specified methods, or use 'all' for all used callers. Allowed: 'bcftools','freebayes', 'mutect2', 'all'.
+  bcftools_consensus: ["all"] # list of enum(["all"]): Call consensus from called variants by specified methods, or use 'all' for all used callers. Allowed: 'bcftools','freebayes', 'mutect2', 'all'.
 consensus:
   callers: ["ivar"] # list of enum([]): Consensus-calling methods. Allowed: 'ivar'.
 

@@ -61,6 +61,7 @@ definitions:
                 - variants__bcftools
           required:
             - variants__bcftools
+          message: "variants__bcftools element must be present if variants->callers contains bcftools."
       - if:
           properties:
             variants:
@@ -79,6 +80,7 @@ definitions:
                 - variants__mutect2_mem_mb
           required:
             - variants__mutect2
+          message: "variants__mutect2 element must be present if variants->callers contains mutect2."
       - if:
           properties:
             variants:
@@ -97,6 +99,7 @@ definitions:
                 - variants__freebayes_mem_mb
           required:
             - variants__freebayes
+          message: "variants__freebayes element must be present if variants->callers contains freebayes."
       - if:
           properties:
             variants:
@@ -108,6 +111,7 @@ definitions:
         then:
           required:
             - variants__ivar
+          message: "variants__ivar element must be present if variants->callers contains ivar."
       - if:
           properties:
             consensus:
@@ -119,6 +123,7 @@ definitions:
         then:
           required:
             - consensus__ivar
+          message: "consensus__ivar element must be present if consensus->callers contains ivar."
       - if:
           properties:
             variants:
@@ -135,6 +140,7 @@ definitions:
                   contains:
                     type: string
                     const: "bcftools"
+          message: "variants->callers must contain bcftools if variants->bcftools_consensus contains bcftools."
       - if:
           properties:
             variants:
