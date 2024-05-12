@@ -26,6 +26,11 @@ for method in config["consensus"]["callers"]:
     include: f"rules/consensus/{method}.smk"
 
 
+if config["variants"]["bcftools_consensus"]:
+
+    include: "rules/consensus/bcftools.smk"
+
+
 # Only include standalone rules if the module is used standalone, i.e. not as a part of a larger workflow
 if not config.get("module_versions") or "variants" not in config["module_versions"]:
 

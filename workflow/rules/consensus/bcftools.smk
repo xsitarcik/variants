@@ -36,7 +36,7 @@ rule bcftools__consensus:
         csi=temp("results/variants/{reference}/{sample}/{tool}_for_consensus.vcf.gz.csi"),
         bed="results/coverage/{reference}/{sample}/low_coverage.bed",
     output:
-        "results/consensus/{reference}/{sample}/bcftools_{tool}.fa",
+        "results/consensus/{reference}/{sample}/{tool}.fa",
     log:
         "logs/consensus_bcftools/{reference}/{sample}_{tool}.log",
     wildcard_constraints:

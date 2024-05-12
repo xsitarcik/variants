@@ -86,6 +86,20 @@ def get_outputs():
             tool=config["consensus"]["callers"],
         )
 
+    if val := config["variants"]["bcftools_consensus"]:
+        if val == "all":
+            tools = [tool for tool in config["variants"]["callers"] if tool != "ivar"]
+            outputs["concat_consensus_bcftools"] = expand(
+                "results/_aggregation/consensus/{reference}_{tool}.fa",
+                reference=references,
+                tool=tools,
+            )
+        else:
+            outputs["concat_consensus_bcftools"] = expand(
+                f"results/_aggregation/consensus/{{reference}}_{val}.fa",
+                reference=references,
+            )
+
     outputs = outputs | get_mapping_outputs()
     return outputs
 
