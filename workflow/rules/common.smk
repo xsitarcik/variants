@@ -87,7 +87,7 @@ def get_outputs():
         )
 
     if val := config["variants"]["bcftools_consensus"]:
-        if val == "all":
+        if len(val) == 1 and val[0] == "all":
             tools = [tool for tool in config["variants"]["callers"] if tool != "ivar"]
             outputs["concat_consensus_bcftools"] = expand(
                 "results/_aggregation/consensus/{reference}_{tool}.fa",

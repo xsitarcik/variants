@@ -36,7 +36,14 @@ rule bcftools__consensus:
         csi="results/variants/{reference}/{sample}/{tool}_for_consensus.vcf.gz.csi",
         bed="results/variants/{reference}/{sample}/low_coverage.bed",
     output:
-        "results/consensus/{reference}/{sample}/{tool}.fa",
+        report(
+            "results/consensus/{reference}/{sample}/{tool}.fa",
+            category="Consensus - {reference}",
+            labels={
+                "Sample": "{sample}",
+                "Type": "{tool}",
+            },
+        ),
     log:
         "logs/consensus_bcftools/{reference}/{sample}_{tool}.log",
     wildcard_constraints:
