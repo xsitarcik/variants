@@ -126,7 +126,7 @@ def infer_reference_faidx(wildcards):
 def infer_segment_consensuses(wildcards):
     with checkpoints.samtools__index_reference.get(reference=wildcards.reference).output[0].open() as f:
         segments = [line.split()[0] for line in f.readlines()]
-    return expand("results/consensus/{{reference}}/{{sample}}/segments/{{tool}}_{segment}.fa", segment=segments)
+    return expand("results/consensus/{{reference}}/{{sample}}/segments/ivar_{segment}.fa", segment=segments)
 
 
 def infer_consensuses_for_reference_tool(wildcards):
